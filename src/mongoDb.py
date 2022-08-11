@@ -20,6 +20,11 @@ def upsertOne(query, record, collectionName=defaultCollection):
   collection.replace_one(query, record, upsert=True)
   print("Success upsert ", str(query))
 
+def deleteOne(query, collectionName=defaultCollection):
+  collection = database[collectionName]
+  collection.delete_one(query)
+  print("Success delete ", str(query))
+
 #query
 def findOne(query={}):
   collection = database[defaultCollection]

@@ -2,21 +2,18 @@
 """Writen By: M. Aidiel Rachman Putra"""
 """Organization: Net-Centic Computing Laboratory | Institut Teknologi Sepuluh Nopember"""
 
+import time
+import os
 import warnings
 # from botnetDetectionWithSimilarityApproach.src.preProcessing import preProcessing
 warnings.simplefilter(action='ignore')
-
 
 from dataLoader import *
 from classification import *
 from splitData import *
 from preProcessing import *
-from mongoDb import *
-import time
-import os
-import uuid
+from sequentialActivityAnalysis import *
 
-attackStageLength = 1 #in second
 listMenu = [
     # "Extract Source Dataset",
     "EXIT"
@@ -75,58 +72,12 @@ def detectionWithLabel(datasetName, selectedScenario): #not intended for anythin
 
 if __name__ == "__main__":
 #   menu()
-    i=7
+    datasetDetail=7
     datasetName = ctu
     stringDatasetName = 'ctu'
-    selectedScenario = 'scenario'+str(i)
+    selectedScenario = 'scenario'+str(datasetDetail)
 
     # botnet_df, normal_df = detectionWithMachineLearning(datasetName,  selectedScenario)
     botnet_df, normal_df = detectionWithLabel(datasetName, selectedScenario)
     botnet_df = labelGenerator(botnet_df)
-    columns = botnet_df.columns.values
-
-    tempSrcAddr = ''
-    tempSequentialActivity = {}
-    for index, row in botnet_df.iterrows():
-        netT = [row[x] for x in columns] #stack values in row to array
-        if(tempSrcAddr != row['SrcAddr']):
-            query = {
-                'SrcAddr':row['SrcAddr'],
-                'FromDatasets': str(stringDatasetName).upper()+str(i)
-            }
-            sequentialActivity = findOne(query)
-            #if the sequential activity not exist in Database
-            if(sequentialActivity == None):
-                sequentialActivity = {
-                    'SequentialActivityId':str(uuid.uuid4()),
-                    'SrcAddr':row['SrcAddr'],
-                    'Activities': [netT],
-                    'Vectors':[],
-                    'FromDatasets': stringDatasetName+str(i),
-                    'ActivityHeaders': columns.tolist()
-                }
-                insertOne(sequentialActivity)
-
-            #if the sequential activity already exist in Database
-            else:
-                sequentialActivity['Activities'].append(netT)
-                upsertOne(
-                    {'SequentialActivityId': sequentialActivity['SequentialActivityId']},
-                    sequentialActivity
-                )
-            tempSequentialActivity = sequentialActivity
-
-        else:
-            tempSequentialActivity['Activities'].append(netT)
-            upsertOne(
-                {'SequentialActivityId': tempSequentialActivity['SequentialActivityId']},
-                tempSequentialActivity
-            )
-
-        tempSrcAddr = row['SrcAddr']
-
-
-
-    record = findOne({'SequentialActivityId':'4efbc90f-fe6c-47ec-b0c5-a9abd46c5090'})
-    dataframe = pd.DataFrame(record['Activities'], columns =record['ActivityHeaders'], dtype = float)
-    print(dataframe.head)
+    sequentialActivityMining(botnet_df, stringDatasetName, datasetDetail)
