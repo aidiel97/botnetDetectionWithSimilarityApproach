@@ -72,7 +72,7 @@ def detectionWithLabel(datasetName, selectedScenario): #not intended for anythin
 
 if __name__ == "__main__":
 #   menu()
-    datasetDetail=7
+    datasetDetail=9
     datasetName = ctu
     stringDatasetName = 'ctu'
     selectedScenario = 'scenario'+str(datasetDetail)
@@ -80,4 +80,5 @@ if __name__ == "__main__":
     # botnet_df, normal_df = detectionWithMachineLearning(datasetName,  selectedScenario)
     botnet_df, normal_df = detectionWithLabel(datasetName, selectedScenario)
     botnet_df = labelGenerator(botnet_df)
-    sequentialActivityMining(botnet_df, stringDatasetName, datasetDetail)
+    # sequentialActivityMining(botnet_df, stringDatasetName, datasetDetail)
+    sequentialActivityReduction(stringDatasetName, datasetDetail)

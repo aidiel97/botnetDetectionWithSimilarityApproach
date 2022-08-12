@@ -1,3 +1,4 @@
+import time
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
@@ -17,7 +18,8 @@ algorithmDict = {
 }
 
 def classification(df, train, test, algorithm):
-  print('\n==========|\t [ '+ algorithm.upper()+' ] Machine Learning Classification [ START ] \t|==========')
+  print('\n==========|\t\t [ '+ algorithm.upper()+' ] Machine Learning Classification [ START ] \t\t\t|==========')
+  start = time.time()
   x_df=df.drop(['Label','activityLabel'],axis=1)
   y_df=df['activityLabel']
   x_train=train.drop(['Label','activityLabel'],axis=1)
@@ -39,6 +41,8 @@ def classification(df, train, test, algorithm):
   accManual = (tp+tn)/(tp+tn+fp+fn)
   print('Acuracy formulas\t\t\t\t: (TP+tTN)/(TP+TN+FP+FN)')
   print('Accuracy\t\t\t\t\t: '+str(accManual))
-
-  print('\n==========|\t [ '+ algorithm.upper()+' ] Machine Learning Classification [ SUCCESS ] \t|==========\n')
+  
+  end = time.time()
+  processingTime = end - start
+  print('\n==========|\t [ '+ algorithm.upper()+' ] Machine Learning Classification [ SUCCESS ] '+str(processingTime)+' s \t|==========')
   return predictionResult

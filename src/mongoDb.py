@@ -12,7 +12,7 @@ def insertOne(dictData, collectionName=defaultCollection):
 
 def insertMany(listData, collectionName=defaultCollection):
   collection = database[collectionName]
-  row = collection.insert_Many(listData)
+  row = collection.insert_many(listData)
   print("success insert with id: "+str(row.inserted_ids))
 
 def upsertOne(query, record, collectionName=defaultCollection):
@@ -20,14 +20,29 @@ def upsertOne(query, record, collectionName=defaultCollection):
   collection.replace_one(query, record, upsert=True)
   print("Success upsert ", str(query))
 
+def updateMany(query, record, collectionName=defaultCollection):
+  collection = database[collectionName]
+  collection.update_many(query, record)
+  print("Success update ", str(query))
+
 def deleteOne(query, collectionName=defaultCollection):
   collection = database[collectionName]
   collection.delete_one(query)
   print("Success delete ", str(query))
 
 #query
-def findOne(query={}):
-  collection = database[defaultCollection]
+def findOne(query={}, collectionName=defaultCollection):
+  collection = database[collectionName]
   doc = collection.find_one(query)
 
   return doc
+
+def aggregate(pipeline, collectionName=defaultCollection):
+  result = []
+  collection = database[collectionName]
+  doc = collection.aggregate(pipeline)
+
+  for record in doc:
+    result.append(record)
+
+  return result
