@@ -10,7 +10,7 @@ from datetime import datetime
 from sklearn.decomposition import TruncatedSVD
 
 collectionUniquePattern = 'uniquePattern'
-attackStageLength = int(ATTACK_STAGE_LENGTH) #in second
+attackStageLength = ATTACK_STAGE_LENGTH #in second
 defaultColumns = DEFAULT_COLUMN
 
 def missingValue(dataFrame):

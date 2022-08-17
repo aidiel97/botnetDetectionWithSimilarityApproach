@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DEFAULT_COLUMN = str(os.getenv('DEFAULT_COLUMN')).split(' ') #get default column from string and split it
-ATTACK_STAGE_LENGTH = os.getenv('ATTACK_STAGE_LENGTH')
+ATTACK_STAGE_LENGTH = int(os.getenv('ATTACK_STAGE_LENGTH'))
 DEFAULT_MACHINE_LEARNING_TRAIN_PROPORTION = os.getenv('DEFAULT_MACHINE_LEARNING_TRAIN_PROPORTION')
 
 MONGO_URL = os.getenv('MONGO_URL')
