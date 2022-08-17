@@ -1,4 +1,5 @@
-import time
+from utilities.watcher import *
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
@@ -17,9 +18,10 @@ algorithmDict = {
   'logisticRegression' : LogisticRegression(C=10000, solver='liblinear')
 }
 
-def classification(df, train, test, algorithm):
-  print('\n==========|\t\t [ '+ algorithm.upper()+' ] Machine Learning Classification [ START ] \t\t\t|==========')
-  start = time.time()
+def classification(df, train, test, algorithm='randomForest'):
+  ctx= algorithm.upper()+'-MACHINE LEARNING CLASSIFICATION'
+  start= watcherStart(ctx)
+
   x_df=df.drop(['Label','activityLabel'],axis=1)
   y_df=df['activityLabel']
   x_train=train.drop(['Label','activityLabel'],axis=1)
@@ -42,7 +44,5 @@ def classification(df, train, test, algorithm):
   print('Acuracy formulas\t\t\t\t: (TP+tTN)/(TP+TN+FP+FN)')
   print('Accuracy\t\t\t\t\t: '+str(accManual))
   
-  end = time.time()
-  processingTime = end - start
-  print('\n==========|\t [ '+ algorithm.upper()+' ] Machine Learning Classification [ SUCCESS ] '+str(processingTime)+' s \t|==========')
+  watcherEnd(ctx, start)
   return predictionResult

@@ -1,8 +1,10 @@
 import pymongo
 
-mongoClient = pymongo.MongoClient("mongodb://localhost:27017/") #better user .env
-database = mongoClient["knowledge-based"] #better user .env
-defaultCollection = "sequentialActivities" #better user .env
+from utilities.globalConfig import MONGO_URL, MONGO_DATABASE, MONGO_COLLECTION_DEFAULT
+
+mongoClient = pymongo.MongoClient(MONGO_URL) #better user .env
+database = mongoClient[MONGO_DATABASE] #better user .env
+defaultCollection = MONGO_COLLECTION_DEFAULT #better user .env
 
 #commmand
 def insertOne(dictData, collectionName=defaultCollection):

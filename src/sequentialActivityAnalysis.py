@@ -1,35 +1,54 @@
 import uuid
-import time
-from mongoDb import *
+import pandas as pd
+
+from src.preProcessing import *
+from utilities.mongoDb import *
+from utilities.watcher import *
+from utilities.globalConfig import DEFAULT_COLUMN, ATTACK_STAGE_LENGTH
+
 from datetime import datetime
+from sklearn.decomposition import TruncatedSVD
 
 collectionUniquePattern = 'uniquePattern'
-attackStageLength = 60 #in second
-defaultColumns = [
-	'StartTime',
-	'Dur',
-	'Proto',
-	'SrcAddr',
-	'Sport',
-	'Dir',
-	'DstAddr',
-	'Dport',
-	'State',
-	'sTos',
-	'dTos',
-	'TotPkts',
-	'TotBytes',
-	'SrcBytes',
-	'Label',
-	'ActivityLabel',
-	't1',
-	'DiffWithPreviousAttack',
-	'NetworkActivity'
-]
+attackStageLength = int(ATTACK_STAGE_LENGTH) #in second
+defaultColumns = DEFAULT_COLUMN
+
+def missingValue(dataFrame):
+    total = dataFrame.isnull().sum().sort_values(ascending = False)
+    Percentage = (dataFrame.isnull().sum()/dataFrame.isnull().count()*100).sort_values(ascending = False)
+    Dtypes =dataFrame.dtypes
+    return pd.concat([total, Percentage,Dtypes], axis=1, keys=['Total', 'Percentage','Dtypes'])
+
+def dimentionalReductor(data):
+  netT = data['NetworkTraffic']
+  header = data['ActivityHeaders']
+
+  df= pd.DataFrame(netT, columns=header, dtype=float)
+  df= transformation(df, False)
+  new_df= df.drop(
+          ["StartTime","Dir","DstAddr","Dport","sTos","dTos","Label","ActivityLabel","t1","NetworkActivity"]
+          ,axis=1)
+  new_df['Sport'] = new_df['Sport'].replace('',0).fillna(0).astype(int, errors='ignore')
+  new_df['Sport'] = new_df['Sport'].apply(str).apply(int, base=16) #handler icmp port
+  new_df['DiffWithPreviousAttack'] = new_df['DiffWithPreviousAttack'].fillna(0).apply(str)
+  
+  truncatedSVD=TruncatedSVD(1)
+  networkId = truncatedSVD.fit_transform(new_df)
+  netId = []
+  for x in networkId:
+    netId.append(x[0])
+
+  print(netId)
+  return netId
+
+def addNetId(data):
+  data['NetworkId'] = dimentionalReductor(data)
+  return data
 
 def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, columns=defaultColumns):
-  print('\n==========|\t\t Sequential Activity Mining [ START ] \t\t\t|==========')
-  start = time.time()
+  ctx='SEQUENTIAL ACTIVITY MINING'
+  start = watcherStart(ctx)
+  
   tempSrcAddr = ''
   tempDstAddr = ''
   tempSequentialActivity = {}
@@ -83,14 +102,13 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, column
 
     tempSrcAddr = row['SrcAddr']
     tempDstAddr = row['DstAddr']
-
-  end = time.time()
-  processingTime = end - start
-  print('\n==========|\t Sequential Activity Mining [ SUCCESS ] '+str(processingTime)+' s \t|==========')
+  
+  watcherEnd(ctx, start)
 
 def sequentialActivityReduction(stringDatasetName, datasetDetail):
-  print('\n==========|\t\t Sequential Activity Reduction [ START ] \t\t\t|==========')
-  start = time.time()
+  ctx='SEQUENTIAL ACTIVITY REDUCTION'
+  start = watcherStart(ctx)
+
   # reduce the duplicate
   pipeline =[
     {
@@ -123,6 +141,7 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
     uniquePattern = findOne(x['name'])
     scannedPattern = findOne(x['name'], collectionUniquePattern)
     if(scannedPattern == None):
+      uniquePattern['NetworkId'] = dimentionalReductor(uniquePattern)
       insertOne(uniquePattern, collectionUniquePattern)
   #end of reduce the duplicate
 
@@ -136,6 +155,7 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
   manyUnscanned = aggregate(pipelineUnscanned)
   manyUnscannedIdentical = aggregate(pipelineUnscanned, collectionUniquePattern)
   if(manyUnscannedIdentical == []):
+    manyUnscanned = map(addNetId, manyUnscanned)
     insertMany(manyUnscanned, collectionUniquePattern)
     updateMany(queryUnscanned,{
       '$set':{
@@ -143,6 +163,4 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
       }
     })
   #end of get unscanned sequential activity
-  end = time.time()
-  processingTime = end - start
-  print('\n==========|\t Sequential Activity Reduction [ SUCCESS ] '+str(processingTime)+' s \t|==========')
+  watcherEnd(ctx, start)

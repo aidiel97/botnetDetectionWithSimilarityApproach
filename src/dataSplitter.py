@@ -7,8 +7,15 @@ In this file there are two types of split datasets:
 import pandas as pd
 import numpy as np
 
+from utilities.watcher import *
+from utilities.globalConfig import DEFAULT_MACHINE_LEARNING_TRAIN_PROPORTION
+
+defaultTrainProportion = DEFAULT_MACHINE_LEARNING_TRAIN_PROPORTION
 #divide the dataset by class, to set the proportion of datatest
-def splitDataFrameWithProportion(dataFrame, trainProportion=0.8):
+def splitDataFrameWithProportion(dataFrame, trainProportion=defaultTrainProportion):
+  ctx='Split Data Frame With Proportion'
+  start= watcherStart(ctx)
+
   normal_df=dataFrame[dataFrame['activityLabel'].isin([0])] #create new normal custom dataframe
   bot_df=dataFrame[dataFrame['activityLabel'].isin([1])] #create a new data frame for bots
 
@@ -27,10 +34,14 @@ def splitDataFrameWithProportion(dataFrame, trainProportion=0.8):
   train = pd.concat([normal_dfTrain, bot_dfTrain])
   test = pd.concat([normal_dfTest, bot_dfTest])
 
+  watcherEnd(ctx, start)
   return train, test
 
 #only take samples for training, testing with all data
-def splitTestAllDataframe(dataFrame, trainProportion=0.8):
+def splitTestAllDataframe(dataFrame, trainProportion=defaultTrainProportion):
+  ctx='Split Test All Dataframe'
+  start= watcherStart(ctx)
+
   normal_df=dataFrame[dataFrame['activityLabel'].isin([0])] #create new normal custom dataframe
   bot_df=dataFrame[dataFrame['activityLabel'].isin([1])] #create a new data frame for bots
 
@@ -47,4 +58,5 @@ def splitTestAllDataframe(dataFrame, trainProportion=0.8):
   train = pd.concat([normal_dfTrain, bot_dfTrain])
   test = dataFrame
 
+  watcherEnd(ctx, start)
   return train, test

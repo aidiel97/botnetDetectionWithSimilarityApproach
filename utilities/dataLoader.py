@@ -1,5 +1,8 @@
 import pandas as pd
 
+from utilities.watcher import *
+from utilities.globalConfig import DATASET_LOCATION, CTU_DIR, NCC_DIR, NCC2_DIR
+
 #all CTU-13 dataset scenarios
 ctuOnline = {
   'scenario1': 'https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-42/detailed-bidirectional-flow-labels/capture20110810.binetflow',
@@ -17,8 +20,8 @@ ctuOnline = {
   'scenario13': 'https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-54/detailed-bidirectional-flow-labels/capture20110815-3.binetflow',
 }
 
-datasetLocation = '../../../0-botnetCollection/datasets'
-ctuLoc = '/CTU-13-Dataset'
+datasetLocation = DATASET_LOCATION
+ctuLoc = CTU_DIR
 ctu = {
   'scenario1': datasetLocation+ctuLoc+'/1/capture20110810.binetflow',
   'scenario2': datasetLocation+ctuLoc+'/2/capture20110811.binetflow',
@@ -35,7 +38,7 @@ ctu = {
   'scenario13': datasetLocation+ctuLoc+'/13/capture20110815-3.binetflow',
 }
 
-nccLoc = '/NCC'
+nccLoc = NCC_DIR
 ncc = {
   'scenario1': datasetLocation+nccLoc+'/scenario_dataset_1/dataset_result.binetflow',
   'scenario2': datasetLocation+nccLoc+'/scenario_dataset_2/dataset_result.binetflow',
@@ -52,15 +55,20 @@ ncc = {
   'scenario13': datasetLocation+nccLoc+'/scenario_dataset_13/dataset_result.binetflow',
 }
 
-nccLoc = '/NCC-2'
+ncc2Loc = NCC2_DIR
 ncc2 = {
-  'scenario1': datasetLocation+nccLoc+'/all-sensors/sensors-all.binetflow',
-  'scenario1': datasetLocation+nccLoc+'/sensor1/sensor1.binetflow',
-  'scenario2': datasetLocation+nccLoc+'/sensor2/sensor2.binetflow',
-  'scenario3': datasetLocation+nccLoc+'/sensor3/sensor3.binetflow',
+  'scenario1': datasetLocation+ncc2Loc+'/all-sensors/sensors-all.binetflow',
+  'scenario1': datasetLocation+ncc2Loc+'/sensor1/sensor1.binetflow',
+  'scenario2': datasetLocation+ncc2Loc+'/sensor2/sensor2.binetflow',
+  'scenario3': datasetLocation+ncc2Loc+'/sensor3/sensor3.binetflow',
 }
 
 def loadDataset(dataset, scenario):
+  ctx='DATASET LOADER'
+  start = watcherStart(ctx)
+
   fileName = dataset[scenario] #load dataset
   raw_df=pd.read_csv(fileName)
+
+  watcherEnd(ctx, start)
   return raw_df
