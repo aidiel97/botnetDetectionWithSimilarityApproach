@@ -57,11 +57,42 @@ ncc = {
 
 ncc2Loc = NCC2_DIR
 ncc2 = {
-  'scenario1': datasetLocation+ncc2Loc+'/all-sensors/sensors-all.binetflow',
   'scenario1': datasetLocation+ncc2Loc+'/sensor1/sensor1.binetflow',
   'scenario2': datasetLocation+ncc2Loc+'/sensor2/sensor2.binetflow',
   'scenario3': datasetLocation+ncc2Loc+'/sensor3/sensor3.binetflow',
 }
+
+ncc2AllScenarios = {
+  'scenario1': datasetLocation+ncc2Loc+'/all-sensors/sensors-all.binetflow',
+}
+
+listAvailableDatasets=[
+  {
+    'name':'CTU-13 (Online Source)',
+    'shortName': 'ctu',
+    'list': ctuOnline
+  },
+  {
+    'name':'CTU-13 (Local Source)',
+    'shortName': 'ctu',
+    'list': ctu
+  },
+  {
+    'name':'NCC (Periodic Botnet)',
+    'shortName': 'ncc',
+    'list': ncc
+  },
+  {
+    'name':'NCC-2 (Simultaneous Botnet)',
+    'shortName': 'ncc2',
+    'list': ncc2
+  },
+  {
+    'name':'NCC-2 (Simultaneous Botnet) AllScenarios',
+    'shortName': 'ncc2-allScenarios',
+    'list': ncc2AllScenarios
+  },
+]
 
 def loadDataset(dataset, scenario):
   ctx='DATASET LOADER'
