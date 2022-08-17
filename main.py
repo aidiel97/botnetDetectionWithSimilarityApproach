@@ -2,8 +2,6 @@
 """Writen By: M. Aidiel Rachman Putra"""
 """Organization: Net-Centic Computing Laboratory | Institut Teknologi Sepuluh Nopember"""
 
-import time
-import os
 import warnings
 # from botnetDetectionWithSimilarityApproach.src.preProcessing import preProcessing
 warnings.simplefilter(action='ignore')
@@ -14,36 +12,8 @@ import src.dataSplitter as ds
 import src.preProcessing as pp
 import src.sequentialActivityAnalysis as saa
 import utilities.dataLoader as dl
-
-listMenu = [
-    # "Extract Source Dataset",
-    "EXIT"
-]
-
-#menu
-def menu():
-  print("\n\n================================================================")
-  print("======| Botnet Simultaneous Dataset Generator |=================")
-  print("================================================================\n")
-  print("Main Menu: ")
-  for i, menu in enumerate(listMenu):
-    print(str(i+1)+". "+menu)
-  print("\n================================================================")
-  choose = input("Enter Menu: ")
-  print("============| Processing Menu: "+choose+". "+listMenu[int(choose)-1]+" |========================\n")
-  if(choose == "1"):
-    # extract()
-    time.sleep(3) # adding 3 seconds time delay
-    os.system("clear")
-    print("++++++| "+listMenu[0]+" Process Success |++++++")
-    print("...back to menu...")
-  elif(int(choose) == len(listMenu)):
-    print("++++++| "+listMenu[-1]+" |++++++")
-    exit()
-  else:
-    print("This Menu Does Not Exist, Please Try Another Input!")
-    time.sleep(3) # adding 3 seconds time delay
-    os.system("clear")
+import utilities.mongoDb as mongo
+import utilities.menuManagement as menu
 
 def detectionWithMachineLearning(datasetName, selectedScenario):
   raw_df = dl.loadDataset(datasetName, selectedScenario)
@@ -72,7 +42,7 @@ def detectionWithLabel(datasetName, selectedScenario): #not intended for anythin
   return botnet_df, normal_df
 
 if __name__ == "__main__":
-#   menu()
+  menu.mainMenu()
   # datasetName = ctu
   # stringDatasetName = 'ctu'
   # for datasetDetail in range(9,14):
@@ -85,13 +55,13 @@ if __name__ == "__main__":
   #   sequentialActivityReduction(stringDatasetName, datasetDetail)
 
   # detector.recons()
-  
-  datasetDetail=7
-  datasetName = dl.ctu
-  stringDatasetName = 'ctu'
-  selectedScenario = 'scenario'+str(datasetDetail)
-  # botnet_df, normal_df = detectionWithMachineLearning(datasetName,  selectedScenario)
-  botnet_df, normal_df = detectionWithLabel(datasetName, selectedScenario)
-  botnet_df = pp.labelGenerator(botnet_df)
-  saa.sequentialActivityMining(botnet_df, stringDatasetName, datasetDetail)
-  saa.sequentialActivityReduction(stringDatasetName, datasetDetail)
+
+  # datasetDetail=7
+  # datasetName = dl.ctu
+  # stringDatasetName = 'ctu'
+  # selectedScenario = 'scenario'+str(datasetDetail)
+  # # botnet_df, normal_df = detectionWithMachineLearning(datasetName,  selectedScenario)
+  # botnet_df, normal_df = detectionWithLabel(datasetName, selectedScenario)
+  # botnet_df = pp.labelGenerator(botnet_df)
+  # saa.sequentialActivityMining(botnet_df, stringDatasetName, datasetDetail)
+  # saa.sequentialActivityReduction(stringDatasetName, datasetDetail)
