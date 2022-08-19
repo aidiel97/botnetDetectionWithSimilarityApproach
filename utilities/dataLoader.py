@@ -87,11 +87,6 @@ listAvailableDatasets=[
     'shortName': 'ncc2',
     'list': ncc2
   },
-  {
-    'name':'NCC-2 (Simultaneous Botnet) AllScenarios',
-    'shortName': 'ncc2-allScenarios',
-    'list': ncc2AllScenarios
-  },
 ]
 
 def loadDataset(dataset, scenario):

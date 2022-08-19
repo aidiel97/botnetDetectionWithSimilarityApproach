@@ -2,11 +2,11 @@ import time
 
 def watcherStart(processName):
   start = time.time()
-  print('\n==========|\t\t '+processName+' [ START ] \t\t\t|==========')
+  print('\n=====================================================| [ START ] '+processName)
 
   return start
 
 def watcherEnd(processName, start=time.time()):
   end = time.time()
   processingTime = end - start
-  print('\n==========|\t '+processName+' [ End ] '+str(processingTime)+' s \t|==========')
+  print('\n=====================================================| [  END  ] '+processName+'('+str(processingTime)+' s)')
