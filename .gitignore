@@ -132,5 +132,5 @@ dmypy.json
 .bson
 
 # Dataset
-.binetflow
-.csv
+/data/testDataset
+/data/knowledgebase
