@@ -1,5 +1,7 @@
 import time
 import os
+import glob
+
 import utilities.mongoDb as mongo
 import utilities.dataLoader as dl
 import src.knowledgebaseGenerator as kbgen
@@ -37,6 +39,14 @@ listMenu =[
   }
 ]
 
+def validateInput(input):
+  try:
+    input = int(input)-1
+    isValid = True
+  except ValueError:
+    isValid = False
+  return isValid, input
+
 def getListDatasetMenu():
   os.system("clear")
   x=1
@@ -48,11 +58,17 @@ def getListDatasetMenu():
     x += 1
   print("\n------------------------------------------")
   choose = input("Choose one dataset: ")
+  isValid, choose = validateInput(choose)
+  if(isValid == False or choose >= len(dl.listAvailableDatasets)):
+    print("This Option Does Not Exist, Bring You Back to Main Menu!")
+    time.sleep(3) # adding 3 seconds time delay
+    os.system("clear")
+    mainMenu() #call menu again
   return choose
 
 def getListDatasetDetailMenu(datasetIndex):
   os.system("clear")
-  chooseDataset = dl.listAvailableDatasets[int(datasetIndex)-1]
+  chooseDataset = dl.listAvailableDatasets[datasetIndex]
   listSubDataset = list(chooseDataset['list'].keys())
   x=1
   print("\n\n------------------------------------------")
@@ -63,6 +79,12 @@ def getListDatasetDetailMenu(datasetIndex):
     x += 1
   print("\n------------------------------------------")
   choose = input("Choose one subDataset: ")
+  isValid, choose = validateInput(choose)
+  if(isValid == False or choose >= len(listSubDataset)):
+    print("This Option Does Not Exist, Bring You Back to Main Menu!")
+    time.sleep(3) # adding 3 seconds time delay
+    os.system("clear")
+    mainMenu() #call menu again
   return choose
 
 def getListTestData():
@@ -70,10 +92,22 @@ def getListTestData():
   print("\n\n------------------------------------------")
   print("\t| List of Test Dataset |")
   print("------------------------------------------\n")
-  dir_path = r'data\\testDataset\\'
-  for path in os.scandir(dir_path):
-      if path.is_file():
-          print(path.name)
+  x=1
+  dir_path = r'data\testDataset\*.*'
+  listFiles = glob.glob(dir_path)
+  for subFiles in listFiles:
+    print(str(x)+". "+subFiles)
+    x += 1
+  
+  print("\n------------------------------------------")
+  choose = input("Choose one subFiles: ")
+  isValid, choose = validateInput(choose)
+  if(isValid and choose < len(listFiles)):
+    choosenDir = listFiles[choose]
+  else:
+    choosenDir = listFiles[0]
+    print("This Option Does Not Exist, Automate Selected to: "+choosenDir)
+  return choosenDir
 
 
 def banner():
@@ -88,7 +122,8 @@ def banner():
   print("\n================================================================")
 
 def execute(menuIndex):
-  if(menuIndex < len(listMenu)):
+  isValid, menuIndex = validateInput(menuIndex)
+  if(isValid and menuIndex < len(listMenu)):
     print("============| Processing Menu: "+str(menuIndex+1)+". "+listMenu[menuIndex]['title']+" |========================\n")
     # execute the function
     listMenu[menuIndex]['functionName']()
@@ -96,7 +131,7 @@ def execute(menuIndex):
     # time.sleep(3) # adding 3 seconds time delay
     # os.system("clear")
     print("\n\t\t"+listMenu[menuIndex]['title']+" Process Success...")
-    print("...back to menu...")
+    print("\tback to menu...")
   else:
     print("This Menu Does Not Exist, Please Try Another Input!")
     time.sleep(3) # adding 3 seconds time delay
@@ -106,4 +141,4 @@ def execute(menuIndex):
 def mainMenu():
   banner()
   choose = input("Enter Menu: ")
-  execute(int(choose)-1)
+  execute(choose)

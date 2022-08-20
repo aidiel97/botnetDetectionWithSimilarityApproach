@@ -48,4 +48,41 @@ def detectionWithLabel(datasetName, selectedScenario): #not intended for anythin
   return botnet_df, normal_df
 
 def detectionWithSimilarity():
-  menu.getListTestData()
+  ctx = 'DETECTION WITH SIMILARITY'
+  choosenDir = menu.getListTestData()
+  segmentTime = SEGMENT_WINDOW_TIME
+  slidingTime = SLIDING_WINDOW_TIME
+  start= watcherStart(ctx)
+
+  if(slidingTime>segmentTime):
+    slidingTime = segmentTime/2
+  
+  df = pd.read_csv(choosenDir)
+  df = pp.transformation(df)
+  df.drop(columns="sTos", inplace=True)
+  df.drop(columns="dTos", inplace=True)
+  df = pp.setEmptyString(df)
+  df = pp.normalization(df)
+  df.sort_values(by='StartTime', inplace=True)
+  df.reset_index(drop=True, inplace=True)
+  
+  #get dataset recorded time
+  dfStartAt = pd.to_datetime(df['StartTime'].iloc[0])
+  dfEndAt = pd.to_datetime(df['StartTime'].iloc[-1])
+  dfRecordingTime = (dfEndAt-dfStartAt).seconds
+  df['DiffWithStart'] = pd.to_datetime(df['StartTime']) - dfStartAt
+  df['DiffWithStart'] = df['DiffWithStart'].dt.total_seconds()
+
+  dfSegmentsCount = round(dfRecordingTime/segmentTime)
+  segmentStartAt = 0
+  segmentEndAt = segmentTime
+  while(segmentEndAt <= dfRecordingTime+1):
+    segment = df.loc[(df['DiffWithStart'] >= segmentStartAt) & (df['DiffWithStart'] < segmentEndAt) ]
+    print(segment['StartTime'].iloc[0])
+    print(segment['StartTime'].iloc[-1])
+    segmentStartAt+=slidingTime
+    segmentEndAt+=slidingTime
+    #sudah bisa dibagi setiap segment, selanjutnya setiap segment dikelompokkan berdasarkan ip, baru analisa similarity, perhatikan kolom yang disertakan waktu analisis
+  # .drop(['DiffWithStart'],axis=1)
+
+  watcherEnd(ctx, start)

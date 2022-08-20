@@ -11,14 +11,10 @@ stateDict = {'': 1, 'FSR_SA': 30, '_FSA': 296, 'FSRPA_FSA': 77, 'SPA_SA': 31, 'F
 protoDict = {'arp': 5, 'unas': 13, 'udp': 1, 'rtcp': 7, 'pim': 3, 'udt': 11, 'esp': 12, 'tcp' : 0, 'rarp': 14, 'ipv6-icmp': 9, 'rtp': 2, 'ipv6': 10, 'ipx/spx': 6, 'icmp': 4, 'igmp' : 8}
 
 def ipToInteger(ip):
-  ctx= '<PRE-PROCESSING> IPv4 to Integer'
-  start = watcherStart(ctx)
   try:
     packedIP = socket.inet_aton(ip)
-    watcherEnd(ctx, start)
     return struct.unpack("!L", packedIP)[0]
   except OSError:
-    watcherEnd(ctx, start)
     return np.nan #return NaN when IP Address is not valid
 
 def transformation(df, oneHotEncode=True):

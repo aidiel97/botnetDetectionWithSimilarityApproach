@@ -31,6 +31,7 @@ def dimentionalReductor(data):
   new_df['Sport'] = new_df['Sport'].replace('',0).fillna(0).astype(int, errors='ignore')
   new_df['Sport'] = new_df['Sport'].apply(str).apply(int, base=16) #handler icmp port
   new_df['DiffWithPreviousAttack'] = new_df['DiffWithPreviousAttack'].fillna(0).apply(str)
+  new_df['position'] = df.index
   
   truncatedSVD=TruncatedSVD(1)
   networkId = truncatedSVD.fit_transform(new_df)

@@ -6,6 +6,8 @@ load_dotenv()
 DEFAULT_COLUMN = str(os.getenv('DEFAULT_COLUMN')).split(' ') #get default column from string and split it
 ATTACK_STAGE_LENGTH = int(os.getenv('ATTACK_STAGE_LENGTH'))
 DEFAULT_MACHINE_LEARNING_TRAIN_PROPORTION = os.getenv('DEFAULT_MACHINE_LEARNING_TRAIN_PROPORTION')
+SEGMENT_WINDOW_TIME = int(os.getenv('SEGMENT_WINDOW_TIME'))
+SLIDING_WINDOW_TIME = int(os.getenv('SLIDING_WINDOW_TIME'))
 
 MONGO_URL = os.getenv('MONGO_URL')
 MONGO_DATABASE = os.getenv('MONGO_DATABASE')
