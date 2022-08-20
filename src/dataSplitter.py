@@ -69,8 +69,8 @@ def generateDataTest(recordingTime=1):
   ctx='Data Test Generator'
   #get input
   datasetIndex = menu.getListDatasetMenu()
-  datasetName = loader.listAvailableDatasets[int(datasetIndex)-1]['list']
-  datasetLabel = loader.listAvailableDatasets[int(datasetIndex)-1]['shortName']
+  datasetName = loader.listAvailableDatasets[datasetIndex]['list']
+  datasetLabel = loader.listAvailableDatasets[datasetIndex]['shortName']
   datasetDetail = menu.getListDatasetDetailMenu(datasetIndex)
   #get input
 

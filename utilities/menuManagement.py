@@ -85,7 +85,7 @@ def getListDatasetDetailMenu(datasetIndex):
     time.sleep(3) # adding 3 seconds time delay
     os.system("clear")
     mainMenu() #call menu again
-  return choose
+  return choose+1
 
 def getListTestData():
   os.system("clear")
