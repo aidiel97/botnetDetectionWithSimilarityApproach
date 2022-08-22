@@ -21,7 +21,7 @@ def transformation(df, oneHotEncode=True):
   ctx= '<PRE-PROCESSING> Transformation'
   start = watcherStart(ctx)
   #maka new label for bot prediciton(1/0)
-  df['activityLabel'] = df['Label'].str.contains('botnet', case=False, regex=True).astype(int)
+  df['ActivityLabel'] = df['Label'].str.contains('botnet', case=False, regex=True).astype(int)
   #transform with dictionary
   df['State']= df['State'].map(stateDict).fillna(0.0).astype(int)
   #transform ip to integet

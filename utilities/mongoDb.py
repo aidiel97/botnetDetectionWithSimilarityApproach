@@ -16,27 +16,27 @@ dumpDefaultCollections = ['sequentialActivities', 'uniquePattern']
 def insertOne(dictData, collectionName=defaultCollection):
   collection = database[collectionName]
   row = collection.insert_one(dictData)
-  print("success insert with id: "+str(row.inserted_id))
+  # print("success insert with id: "+str(row.inserted_id))
 
 def insertMany(listData, collectionName=defaultCollection):
   collection = database[collectionName]
   row = collection.insert_many(listData)
-  print("success insert with id: "+str(row.inserted_ids))
+  # print("success insert with id: "+str(row.inserted_ids))
 
 def upsertOne(query, record, collectionName=defaultCollection):
   collection = database[collectionName]
   collection.replace_one(query, record, upsert=True)
-  print("Success upsert ", str(query))
+  # print("Success upsert ", str(query))
 
 def updateMany(query, record, collectionName=defaultCollection):
   collection = database[collectionName]
   collection.update_many(query, record)
-  print("Success update ", str(query))
+  # print("Success update ", str(query))
 
 def deleteOne(query, collectionName=defaultCollection):
   collection = database[collectionName]
   collection.delete_one(query)
-  print("Success delete ", str(query))
+  # print("Success delete ", str(query))
 
 #query
 def findOne(query={}, collectionName=defaultCollection):

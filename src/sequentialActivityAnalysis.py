@@ -4,7 +4,7 @@ import pandas as pd
 from src.preProcessing import *
 from utilities.mongoDb import *
 from utilities.watcher import *
-from utilities.globalConfig import DEFAULT_COLUMN, ATTACK_STAGE_LENGTH
+from utilities.globalConfig import DEFAULT_COLUMN, ATTACK_STAGE_LENGTH, MONGO_COLLECTION_DEFAULT
 
 from datetime import datetime
 from sklearn.decomposition import TruncatedSVD
@@ -46,13 +46,95 @@ def addNetId(data):
   data['NetworkId'] = dimentionalReductor(data)
   return data
 
-def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, columns=defaultColumns):
+def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, sources='DATASETS', collectionName=MONGO_COLLECTION_DEFAULT, columns=defaultColumns):
   ctx='SEQUENTIAL ACTIVITY MINING'
+  start = watcherStart(ctx)
+
+  sizeDataframe = len(dataframe)
+  progress = 0
+  listOfSequenceData={}
+  repetationOfAttackStages={} #if more than attackStageLength create new attackStages
+  sequenceId = ''
+  diff = 0
+  loadingChar=[]
+  for index, row in dataframe.iterrows():
+    netT = [row[x] for x in columns] #stack values in row to array
+    sequenceIdPrimary = row['SrcAddr']+'-'+row['DstAddr']
+    if(sequenceIdPrimary not in repetationOfAttackStages):
+      repetationOfAttackStages[sequenceIdPrimary] = 0
+      sequenceId = row['SrcAddr']+'-'+row['DstAddr']+'-0'
+    else:
+      sequenceId = row['SrcAddr']+'-'+row['DstAddr']+'-'+str(repetationOfAttackStages[sequenceIdPrimary])
+
+    if(sequenceId in listOfSequenceData):
+      diff = pd.to_datetime(row['StartTime']) - pd.to_datetime(listOfSequenceData[sequenceId]['lastStartTime'])
+      if(diff.seconds <= attackStageLength):
+        listOfSequenceData[sequenceId]['NetworkTraffic'].append(netT)
+        listOfSequenceData[sequenceId]['NetworkActivities'].append(row['NetworkActivity'])
+        listOfSequenceData[sequenceId]['modifiedAt'] = datetime.now()
+        listOfSequenceData[sequenceId]['lastStartTime'] = row['StartTime']
+      else:
+        repetationOfAttackStages[sequenceIdPrimary] += 1
+        sequenceId = row['SrcAddr']+'-'+row['DstAddr']+'-'+str(repetationOfAttackStages[sequenceIdPrimary])
+        listOfSequenceData[sequenceId] = {
+        'SequentialActivityId':str(uuid.uuid4()),
+        'SrcAddr':row['SrcAddr'],
+        'DstAddr':row['DstAddr'],
+        'NetworkTraffic': [netT],
+        'NetworkActivities': [row['NetworkActivity']],
+        'Vectors':[],
+        'FromDatasets': stringDatasetName,
+        'DatasetsDetails': str(datasetDetail),
+        'ActivityHeaders': columns,
+        'createdAt': datetime.now(),
+        'modifiedAt': datetime.now(),
+        'isScanned': False,
+        'sources': sources,
+        'lastStartTime':row['StartTime']
+      }
+
+    else:
+      listOfSequenceData[sequenceId] = {
+        'SequentialActivityId':str(uuid.uuid4()),
+        'SrcAddr':row['SrcAddr'],
+        'DstAddr':row['DstAddr'],
+        'NetworkTraffic': [netT],
+        'NetworkActivities': [row['NetworkActivity']],
+        'Vectors':[],
+        'FromDatasets': stringDatasetName,
+        'DatasetsDetails': str(datasetDetail),
+        'ActivityHeaders': columns,
+        'createdAt': datetime.now(),
+        'modifiedAt': datetime.now(),
+        'isScanned': False,
+        'sources': sources,
+        'lastStartTime':row['StartTime']
+      }
+
+    #log
+    rowCount = index+1
+    progress = round(rowCount/sizeDataframe*100)
+    if(tempProgress != progress):
+      loadingChar.append('~')
+      tempProgress = progress
+      print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
+
+  values = listOfSequenceData.values()
+  insertMany(values)
+  watcherEnd(ctx, start)
+
+#deprecated (need analysis)
+def sequentialActivityMiningWithMongo(dataframe, stringDatasetName, datasetDetail, sources='DATASETS', collectionName=MONGO_COLLECTION_DEFAULT, columns=defaultColumns):
+  ctx='SEQUENTIAL ACTIVITY MINING-WITH MONGO'
   start = watcherStart(ctx)
   
   tempSrcAddr = ''
   tempDstAddr = ''
   tempSequentialActivity = {}
+  sizeDataframe = len(dataframe)
+  progress = 0
+  tempProgress = 0
+  loadingChar=[]
   for index, row in dataframe.iterrows():
     netT = [row[x] for x in columns] #stack values in row to array
     if(tempSrcAddr != row['SrcAddr'] or tempDstAddr != row['DstAddr'] or row['DiffWithPreviousAttack'] >= attackStageLength):
@@ -61,8 +143,9 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, column
         'DstAddr':row['DstAddr'],
         'FromDatasets': str(stringDatasetName),
         'DatasetsDetails': str(datasetDetail),
+        'sources': sources,
       }
-      sequentialActivity = findOne(query)
+      sequentialActivity = findOne(query, collectionName=collectionName)
       #if the sequential activity not exist in Database
       if(sequentialActivity == None or row['DiffWithPreviousAttack'] >= attackStageLength):
         sequentialActivity = {
@@ -78,8 +161,9 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, column
           'createdAt': datetime.now(),
           'modifiedAt': datetime.now(),
           'isScanned': False,
+          'sources': sources,
         }
-        insertOne(sequentialActivity)
+        insertOne(sequentialActivity, collectionName=collectionName)
 
       #if the sequential activity already exist in Database
       else:
@@ -88,7 +172,7 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, column
         sequentialActivity['modifiedAt'] = datetime.now()
         upsertOne(
           {'SequentialActivityId': sequentialActivity['SequentialActivityId']},
-          sequentialActivity
+          sequentialActivity, collectionName=collectionName
         )
       tempSequentialActivity = sequentialActivity
 
@@ -98,13 +182,21 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, column
       tempSequentialActivity['modifiedAt'] = datetime.now()
       upsertOne(
         {'SequentialActivityId': tempSequentialActivity['SequentialActivityId']},
-        tempSequentialActivity
+        tempSequentialActivity, collectionName=collectionName
       )
 
     tempSrcAddr = row['SrcAddr']
     tempDstAddr = row['DstAddr']
+    rowCount = index+1
+    #log
+    progress = round(rowCount/sizeDataframe*100)
+    if(tempProgress != progress):
+      loadingChar.append('~')
+      tempProgress = progress
+      print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
   
   watcherEnd(ctx, start)
+#deprecated (need analysis)
 
 def sequentialActivityReduction(stringDatasetName, datasetDetail):
   ctx='SEQUENTIAL ACTIVITY REDUCTION'

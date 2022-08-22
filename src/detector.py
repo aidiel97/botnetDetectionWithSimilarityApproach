@@ -3,6 +3,7 @@ import pandas as pd
 import src.classificator as cl
 import src.dataSplitter as ds
 import src.preProcessing as pp
+import src.sequentialActivityAnalysis as saa
 import utilities.dataLoader as loader
 import utilities.menuManagement as menu
 
@@ -50,38 +51,63 @@ def detectionWithLabel(datasetName, selectedScenario): #not intended for anythin
 def detectionWithSimilarity():
   ctx = 'DETECTION WITH SIMILARITY'
   choosenDir = menu.getListTestData()
-  segmentTime = SEGMENT_WINDOW_TIME
-  slidingTime = SLIDING_WINDOW_TIME
   start= watcherStart(ctx)
 
-  if(slidingTime>segmentTime):
-    slidingTime = segmentTime/2
-  
   df = pd.read_csv(choosenDir)
-  df = pp.transformation(df)
-  df.drop(columns="sTos", inplace=True)
-  df.drop(columns="dTos", inplace=True)
-  df = pp.setEmptyString(df)
-  df = pp.normalization(df)
+  # df['SrcAddrOrigin'] = df['SrcAddr']
+  # df['DstAddrOrigin'] = df['DstAddr']
+  # df = pp.transformation(df, False)
+  # df = pp.setEmptyString(df)
+  # df = pp.normalization(df)
+  df['ActivityLabel'] = df['Label'].str.contains('botnet', case=False, regex=True).astype(int)
+  df = pp.labelGenerator(df)
   df.sort_values(by='StartTime', inplace=True)
   df.reset_index(drop=True, inplace=True)
-  
-  #get dataset recorded time
-  dfStartAt = pd.to_datetime(df['StartTime'].iloc[0])
-  dfEndAt = pd.to_datetime(df['StartTime'].iloc[-1])
-  dfRecordingTime = (dfEndAt-dfStartAt).seconds
-  df['DiffWithStart'] = pd.to_datetime(df['StartTime']) - dfStartAt
-  df['DiffWithStart'] = df['DiffWithStart'].dt.total_seconds()
 
-  dfSegmentsCount = round(dfRecordingTime/segmentTime)
-  segmentStartAt = 0
-  segmentEndAt = segmentTime
-  while(segmentEndAt <= dfRecordingTime+1):
-    segment = df.loc[(df['DiffWithStart'] >= segmentStartAt) & (df['DiffWithStart'] < segmentEndAt) ]
-    print(segment['StartTime'].iloc[0])
-    print(segment['StartTime'].iloc[-1])
-    segmentStartAt+=slidingTime
-    segmentEndAt+=slidingTime
+  fileName = choosenDir[len(TEST_DATASET_LOCATION):-len('.binetflow')]
+  stringDatasetName = fileName[11:-2]
+  datasetDetail = fileName.split('-')[-1]
+  print(df.columns)
+  # saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, fileName, 'detection-result')
+  saa.sequentialActivityMiningViaMemory(df, stringDatasetName, datasetDetail, fileName, 'detection-result')
+
+  #get dataset recorded time
+  # dfStartAt = pd.to_datetime(df['StartTime'].iloc[0])
+  # dfEndAt = pd.to_datetime(df['StartTime'].iloc[-1])
+  # dfRecordingTime = (dfEndAt-dfStartAt).seconds
+  # df['DiffWithStart'] = pd.to_datetime(df['StartTime']) - dfStartAt
+  # df['DiffWithStart'] = df['DiffWithStart'].dt.total_seconds()
+
+  # dfSegmentsCount = round(dfRecordingTime/segmentTime)
+  # segmentStartAt = 0
+  # segmentEndAt = segmentTime
+  # while(segmentEndAt <= dfRecordingTime+1):
+  #   segment = df.loc[(df['DiffWithStart'] >= segmentStartAt) & (df['DiffWithStart'] < segmentEndAt) ]
+  #   print(segment['StartTime'].iloc[0])
+  #   sources = segment['SrcAddrOrigin'].unique()
+  #   print(sources)
+  #   for ip in sources:
+  #     dfSeqAct = segment.loc[df['SrcAddrOrigin'] == ip]
+  #     dstUnique = segment['DstAddrOrigin'].unique()
+  #     if(len(dstUnique) > 1):
+  #       print(dstUnique)
+  #     print(dfSeqAct)
+  #   print(segment['StartTime'].iloc[-1])
+  #   segmentStartAt+=slidingTime
+  #   segmentEndAt+=slidingTime
+
+  # segment = df.loc[(df['DiffWithStart'] >= 0) & (df['DiffWithStart'] < 120) ]
+  # print(segment['StartTime'].iloc[0])
+  # sources = segment['SrcAddrOrigin'].unique()
+  # print(sources)
+  # for ip in sources:
+  #   dfSeqAct = segment.loc[df['SrcAddrOrigin'] == ip]
+  #   dstUnique = segment['DstAddrOrigin'].unique()
+  #   if(len(dstUnique) > 1):
+
+  #     print(dstUnique)
+  #   print(dfSeqAct)
+  # print(segment['StartTime'].iloc[-1])
     #sudah bisa dibagi setiap segment, selanjutnya setiap segment dikelompokkan berdasarkan ip, baru analisa similarity, perhatikan kolom yang disertakan waktu analisis
   # .drop(['DiffWithStart'],axis=1)
 

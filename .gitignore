@@ -131,6 +131,7 @@ dmypy.json
 # MongoDump File
 .bson
 
-# Dataset
+# Large Data
 /data/testDataset
 /data/knowledgebase
+/data/report
