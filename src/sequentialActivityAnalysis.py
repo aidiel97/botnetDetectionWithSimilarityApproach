@@ -16,7 +16,7 @@ defaultColumns = DEFAULT_COLUMN
 def missingValue(dataFrame):
     total = dataFrame.isnull().sum().sort_values(ascending = False)
     Percentage = (dataFrame.isnull().sum()/dataFrame.isnull().count()*100).sort_values(ascending = False)
-    Dtypes =dataFrame.dtypes
+    Dtypes = dataFrame.dtypes
     return pd.concat([total, Percentage,Dtypes], axis=1, keys=['Total', 'Percentage','Dtypes'])
 
 def dimentionalReductor(data):
@@ -26,8 +26,8 @@ def dimentionalReductor(data):
   df= pd.DataFrame(netT, columns=header, dtype=float)
   df= transformation(df, False)
   new_df= df.drop(
-          ["StartTime","Dir","DstAddr","Dport","sTos","dTos","Label","ActivityLabel","t1","NetworkActivity"]
-          ,axis=1)
+          ["StartTime","Dir","DstAddr","Dport","sTos","dTos","Label","ActivityLabel","NetworkActivity"]
+          ,axis=1, errors='ignore')
   new_df['Sport'] = new_df['Sport'].replace('',0).fillna(0).astype(int, errors='ignore')
   new_df['Sport'] = new_df['Sport'].apply(str).apply(int, base=16) #handler icmp port
   new_df['DiffWithPreviousAttack'] = new_df['DiffWithPreviousAttack'].fillna(0).apply(str)
@@ -42,8 +42,18 @@ def dimentionalReductor(data):
   print(netId)
   return netId
 
+def dimentionalReductionMultiProcess(query, collection):
+  #get unscanned sequential activity
+  query['isScanned']= False
+  pipelineUnscanned = [{ '$match': query }]
+  manyUnscanned = aggregate(pipelineUnscanned, collection)
+  manyUnscanned = map(addNetId, manyUnscanned)
+  deleteMany(query, collection)
+  insertMany(manyUnscanned, collection)
+
 def addNetId(data):
   data['NetworkId'] = dimentionalReductor(data)
+  data['isScanned'] = True
   return data
 
 def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, sources='DATASETS', collectionName=MONGO_COLLECTION_DEFAULT, columns=defaultColumns):
@@ -56,9 +66,11 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
   repetationOfAttackStages={} #if more than attackStageLength create new attackStages
   sequenceId = ''
   diff = 0
+  tempProgress = 0
   loadingChar=[]
   for index, row in dataframe.iterrows():
     netT = [row[x] for x in columns] #stack values in row to array
+    del netT[-1] #delete DiffWithPreviousAttack (change it into diff with previous attack with same source and address)
     sequenceIdPrimary = row['SrcAddr']+'-'+row['DstAddr']
     if(sequenceIdPrimary not in repetationOfAttackStages):
       repetationOfAttackStages[sequenceIdPrimary] = 0
@@ -68,6 +80,7 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
 
     if(sequenceId in listOfSequenceData):
       diff = pd.to_datetime(row['StartTime']) - pd.to_datetime(listOfSequenceData[sequenceId]['lastStartTime'])
+      netT.append(diff.seconds)
       if(diff.seconds <= attackStageLength):
         listOfSequenceData[sequenceId]['NetworkTraffic'].append(netT)
         listOfSequenceData[sequenceId]['NetworkActivities'].append(row['NetworkActivity'])
@@ -82,7 +95,7 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
         'DstAddr':row['DstAddr'],
         'NetworkTraffic': [netT],
         'NetworkActivities': [row['NetworkActivity']],
-        'Vectors':[],
+        'NetworkId':[],
         'FromDatasets': stringDatasetName,
         'DatasetsDetails': str(datasetDetail),
         'ActivityHeaders': columns,
@@ -94,13 +107,14 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
       }
 
     else:
+      netT.append(0)
       listOfSequenceData[sequenceId] = {
         'SequentialActivityId':str(uuid.uuid4()),
         'SrcAddr':row['SrcAddr'],
         'DstAddr':row['DstAddr'],
         'NetworkTraffic': [netT],
         'NetworkActivities': [row['NetworkActivity']],
-        'Vectors':[],
+        'NetworkId':[],
         'FromDatasets': stringDatasetName,
         'DatasetsDetails': str(datasetDetail),
         'ActivityHeaders': columns,
@@ -120,7 +134,7 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
       print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
 
   values = listOfSequenceData.values()
-  insertMany(values)
+  insertMany(values, collectionName)
   watcherEnd(ctx, start)
 
 #deprecated (need analysis)
@@ -154,7 +168,7 @@ def sequentialActivityMiningWithMongo(dataframe, stringDatasetName, datasetDetai
           'DstAddr':row['DstAddr'],
           'NetworkTraffic': [netT],
           'NetworkActivities': [row['NetworkActivity']],
-          'Vectors':[],
+          'NetworkId':[],
           'FromDatasets': stringDatasetName,
           'DatasetsDetails': str(datasetDetail),
           'ActivityHeaders': columns,

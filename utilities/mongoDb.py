@@ -38,6 +38,11 @@ def deleteOne(query, collectionName=defaultCollection):
   collection.delete_one(query)
   # print("Success delete ", str(query))
 
+def deleteMany(query, collectionName=defaultCollection):
+  collection = database[collectionName]
+  collection.delete_many(query)
+  # print("Success delete ", str(query))
+
 #query
 def findOne(query={}, collectionName=defaultCollection):
   collection = database[collectionName]
