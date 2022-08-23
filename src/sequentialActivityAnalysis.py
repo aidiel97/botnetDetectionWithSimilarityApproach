@@ -39,7 +39,6 @@ def dimentionalReductor(data):
   for x in networkId:
     netId.append(x[0])
 
-  print(netId)
   return netId
 
 def dimentionalReductionMultiProcess(query, collection):
