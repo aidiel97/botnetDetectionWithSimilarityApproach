@@ -6,7 +6,7 @@ import numpy as np
 from src.preProcessing import *
 from utilities.mongoDb import *
 from utilities.watcher import *
-from utilities.globalConfig import DEFAULT_COLUMN, ATTACK_STAGE_LENGTH, MONGO_COLLECTION_DEFAULT
+from utilities.globalConfig import DEFAULT_COLUMN, ATTACK_STAGE_LENGTH, MONGO_COLLECTION_DEFAULT, SIMILARITY_THRESHOLD
 
 from datetime import datetime
 from numpy.linalg import norm
@@ -15,7 +15,6 @@ from sklearn.decomposition import TruncatedSVD
 collectionUniquePattern = 'uniquePattern'
 attackStageLength = ATTACK_STAGE_LENGTH #in second
 defaultColumns = DEFAULT_COLUMN
-mongoLimit = 100
 
 def missingValue(dataFrame):
     total = dataFrame.isnull().sum().sort_values(ascending = False)
@@ -50,11 +49,49 @@ def dimentionalReductionMultiProcess(query, collection):
   start = watcherStart(ctx)
   #get unscanned sequential activity
   query['isScanned']= False
-  pipelineUnscanned = [{ '$match': query }]
+  pipelineUnscanned = [
+    { '$match': query },
+    {
+      '$lookup':{
+        'from':collection+'-network-traffic',
+        'localField':'SequentialActivityId',
+        'foreignField':'SequentialActivityId',
+        'as': 'NetworkDetail'
+      }
+    },
+    { '$unwind': '$NetworkDetail' },
+    {
+      '$addFields':{
+        'NetworkTraffic': '$NetworkDetail.NetworkTraffic',
+        'NetworkActivities': '$NetworkDetail.NetworkActivities',
+        'ActivityHeaders': '$NetworkDetail.ActivityHeaders'
+      }
+    },
+    { '$project': { 'NetworkDetail': 0 } }
+  ]
   manyUnscanned = aggregate(pipelineUnscanned, collection)
   manyUnscanned = map(addNetId, manyUnscanned)
+  manyUnscanned = list(manyUnscanned)
+  detection_result = []
+  res = {}
+  for data in manyUnscanned:
+    res = {
+      'SequentialActivityId': data['SequentialActivityId'],
+      'SrcAddr': data['SrcAddr'],
+      'DstAddr': data['DstAddr'],
+      'NetworkId': data['NetworkId'],
+      'FromDatasets': data['FromDatasets'],
+      'DatasetsDetails': data['DatasetsDetails'],
+      'CreatedAt': data['CreatedAt'],
+      'ModifiedAt': datetime.now(),
+      'isScanned': True,
+      'sources': data['sources'],
+      'lastStartTime': data['lastStartTime']
+    }
+    detection_result.append(res)
+
   deleteMany(query, collection)
-  insertMany(manyUnscanned, collection)
+  insertMany(detection_result, collection)
   watcherEnd(ctx, start)
 
 def addNetId(data):
@@ -140,15 +177,39 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
       print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
 
   values = list(listOfSequenceData.values())
-  # if(len(values)>mongoLimit):
-  #   last = 0
-  #   for x in range(0, len(values), mongoLimit):
-  #     insertList = values[x:mongoLimit+last]
-  #     insertMany(insertList, collectionName)
-  #     last+=mongoLimit
-  # else:
-  #   insertMany(values, collectionName)
-  insertMany(values, collectionName)
+  if sources=='DATASETS':
+    insertMany(values, collectionName)
+  else:
+    detection_NetT = [] #new list contain SequentialActivityId, NetworkTraffic
+    netT = {}
+    detection_result = []
+    res = {}
+    for data in values:
+      netT = {
+        'SequentialActivityId': data['SequentialActivityId'],
+        'NetworkTraffic': data['NetworkTraffic'],
+        'NetworkActivities': data['NetworkActivities'],
+        'ActivityHeaders': data['ActivityHeaders'],
+        'sources': data['sources'],
+      }
+      res = {
+        'SequentialActivityId': data['SequentialActivityId'],
+        'SrcAddr': data['SrcAddr'],
+        'DstAddr': data['DstAddr'],
+        'NetworkId': data['NetworkId'],
+        'FromDatasets': data['FromDatasets'],
+        'DatasetsDetails': data['DatasetsDetails'],
+        'CreatedAt': data['createdAt'],
+        'ModifiedAt': data['modifiedAt'],
+        'isScanned': False,
+        'sources': data['sources'],
+        'lastStartTime': data['lastStartTime']
+      }
+      detection_NetT.append(netT)
+      detection_result.append(res)
+
+    insertMany(detection_NetT, collectionName+'-network-traffic')
+    insertMany(detection_result, collectionName)
   watcherEnd(ctx, start)
 
 #deprecated (need analysis)
@@ -287,11 +348,14 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
   watcherEnd(ctx, start)
 
 def similarityMeasurement(query, collection):
+  collectionReport = 'report'
   listSimilarity=[]
+  report = []
   dictOfPattern={}
   pipeline=[{ '$match': query }]
   netTraffics = aggregate(pipeline, collection)
   for activities in netTraffics:
+    del activities['_id']
     activity=activities['NetworkId']
     activitiesLen = len(activity)
     similarity = 0
@@ -310,6 +374,7 @@ def similarityMeasurement(query, collection):
     else:
       samePattern = dictOfPattern[activitiesLen]
 
+    patternId = ''
     #start Scanning
     for p in samePattern:      
       pattern=p['NetworkId']
@@ -321,9 +386,19 @@ def similarityMeasurement(query, collection):
 
       if(tempSimilarity == 1):
         similarity = tempSimilarity
+        patternId =p['SequentialActivityId']
+        break
       else:
         similarity = tempSimilarity if tempSimilarity > similarity else similarity
+        patternId =p['SequentialActivityId']
     
-    listSimilarity.append(round(similarity*100))
+    activities['SimilarityScore'] = similarity
+    activities['PatternId'] = patternId
+    report.append(activities)
+
+  deleteMany(query, collectionReport) #overwrite same source file report
+  insertMany(report, collectionReport)
+    # if similarity > SIMILARITY_THRESHOLD:
+    #   listSimilarity.append(round(similarity*100))
   
-  print(listSimilarity)
+    # print(listSimilarity)
