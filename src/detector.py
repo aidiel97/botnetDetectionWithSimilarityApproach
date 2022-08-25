@@ -27,8 +27,8 @@ def detectionWithMachineLearning(datasetName, selectedScenario):
   df = pp.preProcessing(raw_df) #preProcessed dataframe
   train, test = ds.splitTestAllDataframe(df)
 
-  result = cl.classification(df, train, test, 'randomForest')
-  raw_df = raw_df.drop(['activityLabel'],axis=1)
+  result = cl.classification(df, train, test, selectedScenario, 'randomForest')
+  raw_df = raw_df.drop(['ActivityLabel'],axis=1)
   data = raw_df.assign(ActivityLabel=result) #assign new column
 
   botnet_df = data[data['ActivityLabel'].isin([1])] #create new bot dataframes
@@ -66,5 +66,6 @@ def detectionWithSimilarity():
 
   saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, fileName, detectionResultCollectionName)
   saa.dimentionalReductionMultiProcess({ 'sources': fileName }, detectionResultCollectionName)
+  saa.similarityMeasurement({ 'sources': fileName }, detectionResultCollectionName)
 
   watcherEnd(ctx, start)

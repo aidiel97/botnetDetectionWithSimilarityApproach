@@ -4,18 +4,19 @@ import src.detector as detect
 import utilities.menuManagement as menu
 import utilities.dataLoader as loader
 
-def singleDatasetDetail(settings={}, withMachineLearning=False):
+def singleDatasetDetail(settings={}, withMachineLearning=True):
   if(settings=={}):
     datasetIndex = menu.getListDatasetMenu()
-    datasetName = loader.listAvailableDatasets[int(datasetIndex)-1]['list']
+    datasetName = loader.listAvailableDatasets[int(datasetIndex)]['list']
     datasetDetail = menu.getListDatasetDetailMenu(datasetIndex)
-    stringDatasetName = loader.listAvailableDatasets[int(datasetIndex)-1]['shortName']
+    stringDatasetName = loader.listAvailableDatasets[int(datasetIndex)]['shortName']
   else:
     datasetName = settings['datasetName']
     datasetDetail = settings['datasetDetail']
     stringDatasetName = settings['stringDatasetName']
 
   selected = 'scenario'+str(datasetDetail)
+  print('\tProcessing dataset '+stringDatasetName+' scenario/sensors '+str(datasetDetail)+'...')
   if(withMachineLearning==True):
     botnet_df, normal_df = detect.detectionWithMachineLearning(datasetName,  selected)
   else:
@@ -27,10 +28,10 @@ def singleDatasetDetail(settings={}, withMachineLearning=False):
 
 def multiDatasetDetail():
   datasetIndex = menu.getListDatasetMenu()
-  listSubDataset = loader.listAvailableDatasets[int(datasetIndex)-1]['list']
+  listSubDataset = loader.listAvailableDatasets[int(datasetIndex)]['list']
   settings = {
-    'datasetName': loader.listAvailableDatasets[int(datasetIndex)-1]['list'],
-    'stringDatasetName': loader.listAvailableDatasets[int(datasetIndex)-1]['shortName'],
+    'datasetName': loader.listAvailableDatasets[int(datasetIndex)]['list'],
+    'stringDatasetName': loader.listAvailableDatasets[int(datasetIndex)]['shortName'],
   }
   for index in range(1, len(listSubDataset)+1):
     settings['datasetDetail'] = index

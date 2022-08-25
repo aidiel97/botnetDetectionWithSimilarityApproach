@@ -1,5 +1,7 @@
+from typing import Collection
 import uuid
 import pandas as pd
+import numpy as np
 
 from src.preProcessing import *
 from utilities.mongoDb import *
@@ -7,11 +9,13 @@ from utilities.watcher import *
 from utilities.globalConfig import DEFAULT_COLUMN, ATTACK_STAGE_LENGTH, MONGO_COLLECTION_DEFAULT
 
 from datetime import datetime
+from numpy.linalg import norm
 from sklearn.decomposition import TruncatedSVD
 
 collectionUniquePattern = 'uniquePattern'
 attackStageLength = ATTACK_STAGE_LENGTH #in second
 defaultColumns = DEFAULT_COLUMN
+mongoLimit = 100
 
 def missingValue(dataFrame):
     total = dataFrame.isnull().sum().sort_values(ascending = False)
@@ -26,7 +30,7 @@ def dimentionalReductor(data):
   df= pd.DataFrame(netT, columns=header, dtype=float)
   df= transformation(df, False)
   new_df= df.drop(
-          ["StartTime","Dir","DstAddr","Dport","sTos","dTos","Label","ActivityLabel","NetworkActivity"]
+          ["StartTime","SrcAddr","Dir","DstAddr","Dport","sTos","dTos","Label","ActivityLabel","NetworkActivity"]
           ,axis=1, errors='ignore')
   new_df['Sport'] = new_df['Sport'].replace('',0).fillna(0).astype(int, errors='ignore')
   new_df['Sport'] = new_df['Sport'].apply(str).apply(int, base=16) #handler icmp port
@@ -42,6 +46,8 @@ def dimentionalReductor(data):
   return netId
 
 def dimentionalReductionMultiProcess(query, collection):
+  ctx='DIMENTIONAL REDUCTION MULTI PROCESS'
+  start = watcherStart(ctx)
   #get unscanned sequential activity
   query['isScanned']= False
   pipelineUnscanned = [{ '$match': query }]
@@ -49,6 +55,7 @@ def dimentionalReductionMultiProcess(query, collection):
   manyUnscanned = map(addNetId, manyUnscanned)
   deleteMany(query, collection)
   insertMany(manyUnscanned, collection)
+  watcherEnd(ctx, start)
 
 def addNetId(data):
   data['NetworkId'] = dimentionalReductor(data)
@@ -132,7 +139,15 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
       tempProgress = progress
       print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
 
-  values = listOfSequenceData.values()
+  values = list(listOfSequenceData.values())
+  # if(len(values)>mongoLimit):
+  #   last = 0
+  #   for x in range(0, len(values), mongoLimit):
+  #     insertList = values[x:mongoLimit+last]
+  #     insertMany(insertList, collectionName)
+  #     last+=mongoLimit
+  # else:
+  #   insertMany(values, collectionName)
   insertMany(values, collectionName)
   watcherEnd(ctx, start)
 
@@ -214,7 +229,7 @@ def sequentialActivityMiningWithMongo(dataframe, stringDatasetName, datasetDetai
 def sequentialActivityReduction(stringDatasetName, datasetDetail):
   ctx='SEQUENTIAL ACTIVITY REDUCTION'
   start = watcherStart(ctx)
-
+  print('On going for dataset '+stringDatasetName+' scenario'+str(datasetDetail)+'......')
   # reduce the duplicate
   pipeline =[
     {
@@ -270,3 +285,45 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
     })
   #end of get unscanned sequential activity
   watcherEnd(ctx, start)
+
+def similarityMeasurement(query, collection):
+  listSimilarity=[]
+  dictOfPattern={}
+  pipeline=[{ '$match': query }]
+  netTraffics = aggregate(pipeline, collection)
+  for activities in netTraffics:
+    activity=activities['NetworkId']
+    activitiesLen = len(activity)
+    similarity = 0
+
+    #check if pattern isalready get before
+    if(activitiesLen not in dictOfPattern):
+      patternCharacteristicPipeline=[
+        {
+          '$match':{
+            'NetworkId':{ '$size': activitiesLen }
+          }
+        }
+      ]
+      samePattern = aggregate(patternCharacteristicPipeline,collectionUniquePattern)
+      dictOfPattern[activitiesLen] = samePattern
+    else:
+      samePattern = dictOfPattern[activitiesLen]
+
+    #start Scanning
+    for p in samePattern:      
+      pattern=p['NetworkId']
+
+      if(activitiesLen == 1):
+        tempSimilarity = norm(activity[0]-pattern[0])/(activity[0]+pattern[0])/2 # compute with difference formula
+      else:
+        tempSimilarity = np.dot(activity,pattern)/(norm(activity)*norm(pattern)) # compute with cosine similarity
+
+      if(tempSimilarity == 1):
+        similarity = tempSimilarity
+      else:
+        similarity = tempSimilarity if tempSimilarity > similarity else similarity
+    
+    listSimilarity.append(round(similarity*100))
+  
+  print(listSimilarity)

@@ -17,18 +17,20 @@ def ipToInteger(ip):
   except OSError:
     return np.nan #return NaN when IP Address is not valid
 
-def transformation(df, oneHotEncode=True):
+def transformation(df, ipv4ToInteger=False, oneHotEncode=False):
   ctx= '<PRE-PROCESSING> Transformation'
-  start = watcherStart(ctx)
+  # start = watcherStart(ctx)
   #maka new label for bot prediciton(1/0)
   df['ActivityLabel'] = df['Label'].str.contains('botnet', case=False, regex=True).astype(int)
   #transform with dictionary
   df['State']= df['State'].map(stateDict).fillna(0.0).astype(int)
-  #transform ip to integet
+  #transform ip to integer
   df.dropna(subset = ["SrcAddr"], inplace=True)
   df.dropna(subset = ["DstAddr"], inplace=True)
-  df['SrcAddr'] = df['SrcAddr'].apply(ipToInteger).fillna(0)
-  df['DstAddr'] = df['DstAddr'].apply(ipToInteger).fillna(0)
+
+  if(ipv4ToInteger==True):
+    df['SrcAddr'] = df['SrcAddr'].apply(ipToInteger).fillna(0)
+    df['DstAddr'] = df['DstAddr'].apply(ipToInteger).fillna(0)
 
   if(oneHotEncode==True):
     #transform with  one-hot-encode
@@ -41,45 +43,45 @@ def transformation(df, oneHotEncode=True):
     #transform with dictionary
     df['Proto']= df['Proto'].map(protoDict).fillna(0.0).astype(int)
 
-  watcherEnd(ctx, start)
+  # watcherEnd(ctx, start)
   return df
 
 def cleansing(df):
   ctx= '<PRE-PROCESSING> Cleansing'
-  start = watcherStart(ctx)
+  # start = watcherStart(ctx)
 
   df.drop(columns="sTos", inplace=True)
   df.drop(columns="dTos", inplace=True)
   df.drop(columns="StartTime", inplace=True)
 
-  watcherEnd(ctx, start)
+  # watcherEnd(ctx, start)
   return df
 
 def setEmptyString(df):
   ctx= '<PRE-PROCESSING> Set Empty String'
-  start = watcherStart(ctx)
+  # start = watcherStart(ctx)
 
   #need to be confirmed and tested is this the best method
   df['Sport'] = df['Sport'].replace('',0).fillna(0).apply(str).apply(int, base=16)
   df['Dport'] = df['Dport'].replace('',0).fillna(0).apply(str).apply(int, base=16)
 
-  watcherEnd(ctx, start)
+  # watcherEnd(ctx, start)
   return df
 
 def normalization(df):
   ctx= '<PRE-PROCESSING> Normalization'
-  start = watcherStart(ctx)
+  # start = watcherStart(ctx)
 
   df['Dur'] = ((df['Dur'] - df['Dur'].min()) / (df['Dur'].max() - df['Dur'].min())* 1000000).astype(int)
   df['SrcAddr'] = ((df['SrcAddr'] - df['SrcAddr'].min()) / (df['SrcAddr'].max() - df['SrcAddr'].min())* 1000000).astype(int)  
   df['DstAddr'] = ((df['DstAddr'] - df['DstAddr'].min()) / (df['DstAddr'].max() - df['DstAddr'].min())* 1000000).astype(int)
 
-  watcherEnd(ctx, start)
+  # watcherEnd(ctx, start)
   return df
 
 def labelGenerator(df):
   ctx= '<PRE-PROCESSING> Label Generator'
-  start = watcherStart(ctx)
+  # start = watcherStart(ctx)
 
   df.sort_values(by='StartTime', inplace=True) #sorting value
   df['StartTime'] = df['StartTime']
@@ -89,17 +91,17 @@ def labelGenerator(df):
   df['DiffWithPreviousAttack'] = df['DiffWithPreviousAttack'].dt.total_seconds()
   df['NetworkActivity'] = df['Label'].str[10:] #slicing, remove flow=From-
 
-  watcherEnd(ctx, start)
+  # watcherEnd(ctx, start)
   return df
 
-def preProcessing(dataframe):
+def preProcessing(dataframe, useCleansing=False, useNormalization=False):
   ctx= 'PRE-PROCESSING <MAIN>'
   start= watcherStart(ctx)
 
   dataframe = transformation(dataframe)
-  dataframe = cleansing(dataframe)
+  dataframe = cleansing(dataframe) if useCleansing==True else dataframe
   dataframe = setEmptyString(dataframe)
-  dataframe = normalization(dataframe)
+  dataframe = normalization(dataframe) if useNormalization==True else dataframe
 
   watcherEnd(ctx, start)
   return dataframe

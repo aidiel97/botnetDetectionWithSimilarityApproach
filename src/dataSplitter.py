@@ -20,8 +20,8 @@ def splitDataFrameWithProportion(dataFrame, trainProportion=defaultTrainProporti
   ctx='Split Data Frame With Proportion'
   start= watcherStart(ctx)
 
-  normal_df=dataFrame[dataFrame['activityLabel'].isin([0])] #create new normal custom dataframe
-  bot_df=dataFrame[dataFrame['activityLabel'].isin([1])] #create a new data frame for bots
+  normal_df=dataFrame[dataFrame['ActivityLabel'].isin([0])] #create new normal custom dataframe
+  bot_df=dataFrame[dataFrame['ActivityLabel'].isin([1])] #create a new data frame for bots
 
   msk_normal = np.random.rand(len(normal_df)) < trainProportion #get random 20% from normal
   msk_bot = np.random.rand(len(bot_df)) < trainProportion #get random 20% from bot
@@ -46,8 +46,8 @@ def splitTestAllDataframe(dataFrame, trainProportion=defaultTrainProportion):
   ctx='Split Test All Dataframe'
   start= watcherStart(ctx)
 
-  normal_df=dataFrame[dataFrame['activityLabel'].isin([0])] #create new normal custom dataframe
-  bot_df=dataFrame[dataFrame['activityLabel'].isin([1])] #create a new data frame for bots
+  normal_df=dataFrame[dataFrame['ActivityLabel'].isin([0])] #create new normal custom dataframe
+  bot_df=dataFrame[dataFrame['ActivityLabel'].isin([1])] #create a new data frame for bots
 
   msk_normal = np.random.rand(len(normal_df)) < trainProportion #get random 20% from normal
   msk_bot = np.random.rand(len(bot_df)) < trainProportion #get random 20% from bot

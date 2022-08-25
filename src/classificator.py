@@ -1,5 +1,8 @@
+import csv
+
 from utilities.watcher import *
 
+from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
@@ -18,21 +21,24 @@ algorithmDict = {
   'logisticRegression' : LogisticRegression(C=10000, solver='liblinear')
 }
 
-def classification(df, train, test, algorithm='randomForest'):
+def classification(df, train, test, selectedScenario='', algorithm='randomForest'):
   ctx= algorithm.upper()+'-MACHINE LEARNING CLASSIFICATION'
   start= watcherStart(ctx)
 
-  x_df=df.drop(['Label','activityLabel'],axis=1)
-  y_df=df['activityLabel']
-  x_train=train.drop(['Label','activityLabel'],axis=1)
-  y_train=train['activityLabel']
-  x_test=test.drop(['Label','activityLabel'],axis=1)
-  y_test=test['activityLabel']
+  x_df=df.drop(['Label','ActivityLabel'],axis=1)
+  y_df=df['ActivityLabel']
+  x_train=train.drop(['StartTime','SrcAddr','DstAddr','Dir','sTos','dTos','Label','ActivityLabel'],axis=1)
+  y_train=train['ActivityLabel']
+  x_test=test.drop(['StartTime','SrcAddr','DstAddr','Dir','sTos','dTos','Label','ActivityLabel'],axis=1)
+  y_test=test['ActivityLabel']
 
   model = algorithmDict[algorithm]
   model.fit(x_train, y_train)
   predictionResult = model.predict(x_test)
   tn, fp, fn, tp = confusion_matrix(y_df, predictionResult).ravel()
+  precision = precision_score(y_test, predictionResult, average='micro')
+  recall = recall_score(y_test, predictionResult)
+  f1 = f1_score(y_test, predictionResult)
 
   print('\nTotal input data\t\t\t\t: '+str(x_test.shape[0]))
   print('TN (predict result normal, actual normal)\t: '+str(tn))
@@ -44,5 +50,15 @@ def classification(df, train, test, algorithm='randomForest'):
   print('Acuracy formulas\t\t\t\t: (TP+tTN)/(TP+TN+FP+FN)')
   print('Accuracy\t\t\t\t\t: '+str(accManual))
   
+  # list of column names 
+  field_names = ['Scenario','CreatedAt','Algorithm','Accuracy','Precision','Recall', 'F1']
+    
+  # Dictionary
+  dict = {"Scenario": selectedScenario, "CreatedAt": datetime.now(), "Algorithm":algorithm, "Accuracy":accManual, "Precision":precision, "Recall": recall, "F1": f1}
+
+  with open('data/classification_results.csv', 'a') as csv_file:
+      dict_object = csv.DictWriter(csv_file, fieldnames=field_names) 
+      dict_object.writerow(dict)
+
   watcherEnd(ctx, start)
   return predictionResult
