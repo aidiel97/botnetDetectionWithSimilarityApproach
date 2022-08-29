@@ -89,7 +89,7 @@ def labelGenerator(df):
   df.reset_index(drop=True, inplace=True) #reset index from parent dataframe
   df['DiffWithPreviousAttack'] = pd.to_datetime(df['StartTime']) - pd.to_datetime(df['t1'])
   df['DiffWithPreviousAttack'] = df['DiffWithPreviousAttack'].dt.total_seconds()
-  df['NetworkActivity'] = df['Label'].str[10:] #slicing, remove flow=From-
+  df['NetworkActivity'] = df['Label'].str[5:] #slicing, remove flow=
 
   # watcherEnd(ctx, start)
   return df

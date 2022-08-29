@@ -63,9 +63,10 @@ def detectionWithSimilarity():
   fileName = choosenDir[len(TEST_DATASET_LOCATION):-len('.binetflow')]
   stringDatasetName = fileName[11:-2]
   datasetDetail = fileName.split('-')[-1]
-
-  saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, fileName, detectionResultCollectionName)
-  saa.dimentionalReductionMultiProcess({ 'sources': fileName }, detectionResultCollectionName)
-  saa.similarityMeasurement({ 'sources': fileName }, detectionResultCollectionName)
+  sourcesQuery = { 'sources': fileName }
+  # saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, fileName, detectionResultCollectionName)
+  # saa.dimentionalReductionMultiProcess(soucesQuery, detectionResultCollectionName)
+  # saa.similarityMeasurement(soucesQuery, detectionResultCollectionName)
+  saa.reportDocumentation(sourcesQuery)
 
   watcherEnd(ctx, start)

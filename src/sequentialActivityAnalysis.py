@@ -70,10 +70,13 @@ def dimentionalReductionMultiProcess(query, collection):
     { '$project': { 'NetworkDetail': 0 } }
   ]
   manyUnscanned = aggregate(pipelineUnscanned, collection)
+  print('\tMapping NetworkId Start...')
   manyUnscanned = map(addNetId, manyUnscanned)
+  print('\tMapping NetworkId End...')
   manyUnscanned = list(manyUnscanned)
   detection_result = []
   res = {}
+  loadingChar=[]
   for data in manyUnscanned:
     res = {
       'SequentialActivityId': data['SequentialActivityId'],
@@ -89,6 +92,9 @@ def dimentionalReductionMultiProcess(query, collection):
       'lastStartTime': data['lastStartTime']
     }
     detection_result.append(res)
+    loadingChar.append('~')
+    progress=round(len(detection_result)/manyUnscanned*100)
+    print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
 
   deleteMany(query, collection)
   insertMany(detection_result, collection)
@@ -348,6 +354,9 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
   watcherEnd(ctx, start)
 
 def similarityMeasurement(query, collection):
+  ctx='SIMILARITY MEASUREMENT'
+  start = watcherStart(ctx)
+
   collectionReport = 'report'
   listSimilarity=[]
   report = []
@@ -402,3 +411,26 @@ def similarityMeasurement(query, collection):
     #   listSimilarity.append(round(similarity*100))
   
     # print(listSimilarity)
+  watcherEnd(ctx, start)
+
+def reportDocumentation(query):
+  ctx='REPORT DOCUMENTATION'
+  start = watcherStart(ctx)
+  reportCollection = 'report'
+  query['SimilarityScore'] = { '$gt': SIMILARITY_THRESHOLD }
+  queryPipeline=[
+    { '$match': query },
+    {
+      '$group': {
+        '_id': {
+          'SrcAddr': '$SrcAddr'
+        },
+        'count': { '$sum': 1 }
+      }
+    },
+    {'$match': {'_id' :{ '$ne' : None }} }, 
+    {'$project': {'name' : '$_id', '_id' : 0} }
+  ]
+  listAttacker = aggregate(queryPipeline, reportCollection)
+  print(listAttacker)
+  watcherEnd(ctx, start)
