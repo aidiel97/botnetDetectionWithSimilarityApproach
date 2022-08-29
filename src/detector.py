@@ -64,9 +64,9 @@ def detectionWithSimilarity():
   stringDatasetName = fileName[11:-2]
   datasetDetail = fileName.split('-')[-1]
   sourcesQuery = { 'sources': fileName }
-  # saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, fileName, detectionResultCollectionName)
-  # saa.dimentionalReductionMultiProcess(soucesQuery, detectionResultCollectionName)
-  # saa.similarityMeasurement(soucesQuery, detectionResultCollectionName)
+  saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, fileName, detectionResultCollectionName)
+  saa.dimentionalReductionMultiProcess(soucesQuery, detectionResultCollectionName)
+  saa.similarityMeasurement(soucesQuery, detectionResultCollectionName)
   saa.reportDocumentation(sourcesQuery)
 
   watcherEnd(ctx, start)
