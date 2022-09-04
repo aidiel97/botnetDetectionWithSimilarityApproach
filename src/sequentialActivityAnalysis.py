@@ -117,7 +117,7 @@ def dimentionalReductionMultiProcess(values, collection):
       'NetworkId': data['NetworkId'],
       'FromDatasets': data['FromDatasets'],
       'DatasetsDetails': data['DatasetsDetails'],
-      'CreatedAt': data['CreatedAt'],
+      'CreatedAt': datetime.now(),
       'ModifiedAt': datetime.now(),
       'isScanned': True,
       'sources': data['sources'],
@@ -125,7 +125,7 @@ def dimentionalReductionMultiProcess(values, collection):
     }
     detection_result.append(res)
     loadingChar.append('~')
-    progress=round(len(detection_result)/manyUnscanned*100)
+    progress=round(len(detection_result)/len(manyUnscanned)*100)
     print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
 
   deleteMany(query, collection)
@@ -419,6 +419,10 @@ def similarityMeasurement(query, collection):
       samePattern = dictOfPattern[activitiesLen]
 
     patternId = ''
+    if(len(samePattern) == 0 ):
+      similarity = 0
+      patternId = ''
+
     #start Scanning
     for p in samePattern:      
       pattern=p['NetworkId']
