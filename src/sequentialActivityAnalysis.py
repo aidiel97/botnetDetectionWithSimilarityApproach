@@ -93,7 +93,7 @@ def dimentionalReductionMultiProcessByMongo(query, collection):
     }
     detection_result.append(res)
     loadingChar.append('~')
-    progress=round(len(detection_result)/manyUnscanned*100)
+    progress=round(len(detection_result)/len(manyUnscanned)*100)
     print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
 
   deleteMany(query, collection)
@@ -467,5 +467,4 @@ def reportDocumentation(query):
     {'$project': {'name' : '$_id', '_id' : 0} }
   ]
   listAttacker = aggregate(queryPipeline, reportCollection)
-  print(listAttacker)
   watcherEnd(ctx, start)

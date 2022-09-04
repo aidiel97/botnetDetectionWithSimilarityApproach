@@ -91,7 +91,6 @@ def generateDataTest(recordingTime=1):
   startingPoint = dataFrame.sample()
   while((dfEndAt - pd.to_datetime(startingPoint.iloc[0]['StartTime'])).seconds//3600 < recordingTime ):
     startingPoint = dataFrame.sample()
-    print(loopCount)
     loopCount-=1
     if(loopCount==0):
       break
