@@ -51,22 +51,33 @@ def detectionWithLabel(datasetName, selectedScenario): #not intended for anythin
 def detectionWithSimilarity():
   ctx = 'DETECTION WITH SIMILARITY'
   detectionResultCollectionName = 'detection-result'
-  choosenDir = menu.getListTestData()
+  # choosenDir = menu.getListTestData()
+  datasetIndex = menu.getListDatasetMenu()
+  datasetName = loader.listAvailableDatasets[int(datasetIndex)]['list']
+  datasetDetail = menu.getListDatasetDetailMenu(datasetIndex)
+  stringDatasetName = loader.listAvailableDatasets[int(datasetIndex)]['shortName']
   start= watcherStart(ctx)
 
-  df = pd.read_csv(choosenDir)
+
+  selected = 'scenario'+str(datasetDetail)
+  print('\tProcessing dataset '+stringDatasetName+' scenario/sensors '+str(datasetDetail)+'...')
+  # df = pd.read_csv(choosenDir)
+  df = loader.loadDataset(datasetName, selected)
+
+  print(df)
   df['ActivityLabel'] = df['Label'].str.contains('botnet', case=False, regex=True).astype(int)
   df = pp.labelGenerator(df)
   df.sort_values(by='StartTime', inplace=True)
   df.reset_index(drop=True, inplace=True)
 
-  fileName = choosenDir[len(TEST_DATASET_LOCATION):-len('.binetflow')]
+  # fileName = choosenDir[len(TEST_DATASET_LOCATION):-len('.binetflow')]
+  fileName = selected
   stringDatasetName = fileName[11:-2]
   datasetDetail = fileName.split('-')[-1]
   sourcesQuery = { 'sources': fileName }
-  saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, fileName, detectionResultCollectionName)
-  saa.dimentionalReductionMultiProcess(soucesQuery, detectionResultCollectionName)
-  saa.similarityMeasurement(soucesQuery, detectionResultCollectionName)
+  values = saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, fileName, detectionResultCollectionName)
+  saa.dimentionalReductionMultiProcess(values, detectionResultCollectionName)
+  saa.similarityMeasurement(sourcesQuery, detectionResultCollectionName)
   saa.reportDocumentation(sourcesQuery)
 
   watcherEnd(ctx, start)

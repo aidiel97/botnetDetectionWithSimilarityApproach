@@ -44,7 +44,7 @@ def dimentionalReductor(data):
 
   return netId
 
-def dimentionalReductionMultiProcess(query, collection):
+def dimentionalReductionMultiProcessByMongo(query, collection):
   ctx='DIMENTIONAL REDUCTION MULTI PROCESS'
   start = watcherStart(ctx)
   #get unscanned sequential activity
@@ -72,6 +72,38 @@ def dimentionalReductionMultiProcess(query, collection):
   manyUnscanned = aggregate(pipelineUnscanned, collection)
   print('\tMapping NetworkId Start...')
   manyUnscanned = map(addNetId, manyUnscanned)
+  print('\tMapping NetworkId End...')
+  manyUnscanned = list(manyUnscanned)
+  detection_result = []
+  res = {}
+  loadingChar=[]
+  for data in manyUnscanned:
+    res = {
+      'SequentialActivityId': data['SequentialActivityId'],
+      'SrcAddr': data['SrcAddr'],
+      'DstAddr': data['DstAddr'],
+      'NetworkId': data['NetworkId'],
+      'FromDatasets': data['FromDatasets'],
+      'DatasetsDetails': data['DatasetsDetails'],
+      'CreatedAt': data['CreatedAt'],
+      'ModifiedAt': datetime.now(),
+      'isScanned': True,
+      'sources': data['sources'],
+      'lastStartTime': data['lastStartTime']
+    }
+    detection_result.append(res)
+    loadingChar.append('~')
+    progress=round(len(detection_result)/manyUnscanned*100)
+    print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
+
+  deleteMany(query, collection)
+  insertMany(detection_result, collection)
+  watcherEnd(ctx, start)
+
+def dimentionalReductionMultiProcess(values, collection):
+  ctx='DIMENTIONAL REDUCTION MULTI PROCESS'
+  start = watcherStart(ctx)
+  manyUnscanned = map(addNetId, values)
   print('\tMapping NetworkId End...')
   manyUnscanned = list(manyUnscanned)
   detection_result = []
@@ -186,37 +218,40 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
   if sources=='DATASETS':
     insertMany(values, collectionName)
   else:
-    detection_NetT = [] #new list contain SequentialActivityId, NetworkTraffic
-    netT = {}
-    detection_result = []
-    res = {}
-    for data in values:
-      netT = {
-        'SequentialActivityId': data['SequentialActivityId'],
-        'NetworkTraffic': data['NetworkTraffic'],
-        'NetworkActivities': data['NetworkActivities'],
-        'ActivityHeaders': data['ActivityHeaders'],
-        'sources': data['sources'],
-      }
-      res = {
-        'SequentialActivityId': data['SequentialActivityId'],
-        'SrcAddr': data['SrcAddr'],
-        'DstAddr': data['DstAddr'],
-        'NetworkId': data['NetworkId'],
-        'FromDatasets': data['FromDatasets'],
-        'DatasetsDetails': data['DatasetsDetails'],
-        'CreatedAt': data['createdAt'],
-        'ModifiedAt': data['modifiedAt'],
-        'isScanned': False,
-        'sources': data['sources'],
-        'lastStartTime': data['lastStartTime']
-      }
-      detection_NetT.append(netT)
-      detection_result.append(res)
+    # detection_NetT = [] #new list contain SequentialActivityId, NetworkTraffic
+    # netT = {}
+    # detection_result = []
+    # res = {}
+    # for data in values:
+    #   netT = {
+    #     'SequentialActivityId': data['SequentialActivityId'],
+    #     'NetworkTraffic': data['NetworkTraffic'],
+    #     'NetworkActivities': data['NetworkActivities'],
+    #     'ActivityHeaders': data['ActivityHeaders'],
+    #     'sources': data['sources'],
+    #   }
+    #   res = {
+    #     'SequentialActivityId': data['SequentialActivityId'],
+    #     'SrcAddr': data['SrcAddr'],
+    #     'DstAddr': data['DstAddr'],
+    #     'NetworkId': data['NetworkId'],
+    #     'FromDatasets': data['FromDatasets'],
+    #     'DatasetsDetails': data['DatasetsDetails'],
+    #     'CreatedAt': data['createdAt'],
+    #     'ModifiedAt': data['modifiedAt'],
+    #     'isScanned': False,
+    #     'sources': data['sources'],
+    #     'lastStartTime': data['lastStartTime']
+    #   }
+    #   detection_NetT.append(netT)
+    #   detection_result.append(res)
 
-    insertMany(detection_NetT, collectionName+'-network-traffic')
-    insertMany(detection_result, collectionName)
+    # insertMany(detection_NetT, collectionName+'-network-traffic')
+    # insertMany(detection_result, collectionName)
+    return values
+
   watcherEnd(ctx, start)
+  return 0
 
 #deprecated (need analysis)
 def sequentialActivityMiningWithMongo(dataframe, stringDatasetName, datasetDetail, sources='DATASETS', collectionName=MONGO_COLLECTION_DEFAULT, columns=defaultColumns):
