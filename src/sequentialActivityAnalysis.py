@@ -128,7 +128,6 @@ def dimentionalReductionMultiProcess(values, collection):
     progress=round(len(detection_result)/len(manyUnscanned)*100)
     print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
 
-  deleteMany(query, collection)
   insertMany(detection_result, collection)
   watcherEnd(ctx, start)
 
