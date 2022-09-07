@@ -129,6 +129,7 @@ def dimentionalReductionMultiProcess(values, collection):
 
   insertMany(detection_result, collection)
   watcherEnd(ctx, start)
+  return detection_result
 
 def addNetId(data):
   data['NetworkId'] = dimentionalReductor(data)
@@ -386,7 +387,7 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
   #end of get unscanned sequential activity
   watcherEnd(ctx, start)
 
-def similarityMeasurement(query, collection):
+def similarityMeasurementMongo(query, collection):
   ctx='SIMILARITY MEASUREMENT'
   start = watcherStart(ctx)
 
@@ -396,6 +397,84 @@ def similarityMeasurement(query, collection):
   dictOfPattern={}
   pipeline=[{ '$match': query }]
   netTraffics = aggregate(pipeline, collection)
+  for activities in netTraffics:
+    del activities['_id']
+    activity=activities['NetworkId']
+    activitiesLen = len(activity)
+    similarityPer = 0
+    similaritySpo = 0
+    similaritySim = 0
+
+    #check if pattern isalready get before
+    if(activitiesLen==0 or activitiesLen>21407):
+      activities['SimilarityScorePer'] = 0
+      activities['SimilarityScoreSpo'] = 0
+      activities['SimilarityScoreSim'] = 0
+      activities['PatternId'] = ''
+      report.append(activities)
+      continue
+    elif(activitiesLen not in dictOfPattern):
+      patternCharacteristicPipeline=[
+        {
+          '$match':{
+            'NetworkId':{ '$size': activitiesLen }
+          }
+        }
+      ]
+      samePattern = aggregate(patternCharacteristicPipeline,collectionUniquePattern)
+      dictOfPattern[activitiesLen] = samePattern
+    else:
+      samePattern = dictOfPattern[activitiesLen]
+
+    patternPerId = ''
+    patternSpoId = ''
+    patternSimId = ''
+    #start Scanning
+    for p in samePattern:      
+      pattern=p['NetworkId']
+
+      if(activitiesLen == 1):
+        tempSimilarity = norm(activity[0]-pattern[0])/(activity[0]+pattern[0])/2 # compute with difference formula
+      else:
+        tempSimilarity = np.dot(activity,pattern)/(norm(activity)*norm(pattern)) # compute with cosine similarity
+
+      if(p['FromDatasets']=='ctu' and tempSimilarity>similaritySpo):
+        similaritySpo= tempSimilarity
+        patternSpoId =p['SequentialActivityId']
+      elif(p['FromDatasets']=='ncc' and tempSimilarity>similaritySpo):
+        similarityPer= tempSimilarity
+        patternPerId =p['SequentialActivityId']
+      elif(p['FromDatasets']=='ncc2' and tempSimilarity>similaritySim):
+        similaritySim= tempSimilarity
+        patternSimId =p['SequentialActivityId']
+      else:
+        continue
+    
+    activities['SimilarityScoreSpo'] = similaritySpo
+    activities['SimilarityScorePer'] = similarityPer
+    activities['SimilarityScoreSim'] = similaritySim
+    activities['PatternSpoId'] = patternSpoId
+    activities['PatternPerId'] = patternPerId
+    activities['PatternSimId'] = patternSimId
+    report.append(activities)
+
+  deleteMany(query, collectionReport) #overwrite same source file report
+  insertMany(report, collectionReport)
+    # if similarity > SIMILARITY_THRESHOLD:
+    #   listSimilarity.append(round(similarity*100))
+  
+    # print(listSimilarity)
+  watcherEnd(ctx, start)
+
+def similarityMeasurement(query, collection, value=[]):
+  ctx='SIMILARITY MEASUREMENT'
+  start = watcherStart(ctx)
+
+  collectionReport = 'report'
+  listSimilarity=[]
+  report = []
+  dictOfPattern={}
+  netTraffics = value
   for activities in netTraffics:
     del activities['_id']
     activity=activities['NetworkId']
