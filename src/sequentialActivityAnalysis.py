@@ -401,10 +401,19 @@ def similarityMeasurement(query, collection):
     del activities['_id']
     activity=activities['NetworkId']
     activitiesLen = len(activity)
-    similarity = 0
+    similarityPer = 0
+    similaritySpo = 0
+    similaritySim = 0
 
     #check if pattern isalready get before
-    if(activitiesLen not in dictOfPattern):
+    if(activitiesLen==0 or activitiesLen>21407):
+      activities['SimilarityScorePer'] = 0
+      activities['SimilarityScoreSpo'] = 0
+      activities['SimilarityScoreSim'] = 0
+      activities['PatternId'] = ''
+      report.append(activities)
+      continue
+    elif(activitiesLen not in dictOfPattern):
       patternCharacteristicPipeline=[
         {
           '$match':{
@@ -417,11 +426,9 @@ def similarityMeasurement(query, collection):
     else:
       samePattern = dictOfPattern[activitiesLen]
 
-    patternId = ''
-    if(len(samePattern) == 0 ):
-      similarity = 0
-      patternId = ''
-
+    patternPerId = ''
+    patternSpoId = ''
+    patternSimId = ''
     #start Scanning
     for p in samePattern:      
       pattern=p['NetworkId']
@@ -431,16 +438,24 @@ def similarityMeasurement(query, collection):
       else:
         tempSimilarity = np.dot(activity,pattern)/(norm(activity)*norm(pattern)) # compute with cosine similarity
 
-      if(tempSimilarity == 1):
-        similarity = tempSimilarity
-        patternId =p['SequentialActivityId']
-        break
+      if(p['FromDatasets']=='ctu' and tempSimilarity>similaritySpo):
+        similaritySpo= similarity
+        patternSpoId =p['SequentialActivityId']
+      elif(p['FromDatasets']=='ncc' and tempSimilarity>similaritySpo):
+        similarityPer= similarity
+        patternPerId =p['SequentialActivityId']
+      elif(p['FromDatasets']=='ncc2' and tempSimilarity>similaritySim):
+        similaritySim= similarity
+        patternSimId =p['SequentialActivityId']
       else:
-        similarity = tempSimilarity if tempSimilarity > similarity else similarity
-        patternId =p['SequentialActivityId']
+        continue
     
-    activities['SimilarityScore'] = similarity
-    activities['PatternId'] = patternId
+    activities['SimilarityScoreSpo'] = similaritySpo
+    activities['SimilarityScorePer'] = similarityPer
+    activities['SimilarityScoreSim'] = similaritySim
+    activities['PatternSpoId'] = patternSpoId
+    activities['PatternPerId'] = patternPerId
+    activities['PatternSimId'] = patternSimId
     report.append(activities)
 
   deleteMany(query, collectionReport) #overwrite same source file report
