@@ -124,9 +124,8 @@ def dimentionalReductionMultiProcess(values, collection):
       'lastStartTime': data['lastStartTime']
     }
     detection_result.append(res)
-    loadingChar.append('~')
     progress=round(len(detection_result)/len(manyUnscanned)*100)
-    print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
+    print(str(progress)+'% data scanned!', end="\r")
 
   insertMany(detection_result, collection)
   watcherEnd(ctx, start)
@@ -439,13 +438,13 @@ def similarityMeasurement(query, collection):
         tempSimilarity = np.dot(activity,pattern)/(norm(activity)*norm(pattern)) # compute with cosine similarity
 
       if(p['FromDatasets']=='ctu' and tempSimilarity>similaritySpo):
-        similaritySpo= similarity
+        similaritySpo= tempSimilarity
         patternSpoId =p['SequentialActivityId']
       elif(p['FromDatasets']=='ncc' and tempSimilarity>similaritySpo):
-        similarityPer= similarity
+        similarityPer= tempSimilarity
         patternPerId =p['SequentialActivityId']
       elif(p['FromDatasets']=='ncc2' and tempSimilarity>similaritySim):
-        similaritySim= similarity
+        similaritySim= tempSimilarity
         patternSimId =p['SequentialActivityId']
       else:
         continue
