@@ -475,14 +475,7 @@ def similarityMeasurement(query, collection, value=[]):
   dictOfPattern={}
   loadingChar = []
   netTraffics = value
-  lenNetT = len(value)
-  tempProgress = 0
-  for activities in netTraffics: 
-    progress = round(len(activities)/lenNetT*100)
-    if(tempProgress != progress):
-      loadingChar.append('~')
-      tempProgress = progress
-      print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
+  for activities in netTraffics:
     del activities['_id']
     activity=activities['NetworkId']
     activitiesLen = len(activity)
