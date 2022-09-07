@@ -103,8 +103,8 @@ def dimentionalReductionMultiProcessByMongo(query, collection):
 def dimentionalReductionMultiProcess(values, collection):
   ctx='DIMENTIONAL REDUCTION MULTI PROCESS'
   start = watcherStart(ctx)
+  print('\tMapping NetworkId Start...')
   manyUnscanned = map(addNetId, values)
-  print('\tMapping NetworkId End...')
   manyUnscanned = list(manyUnscanned)
   detection_result = []
   res = {}
@@ -124,9 +124,8 @@ def dimentionalReductionMultiProcess(values, collection):
       'lastStartTime': data['lastStartTime']
     }
     detection_result.append(res)
-    progress=round(len(detection_result)/len(manyUnscanned)*100)
-    print(str(progress)+'% data scanned!', end="\r")
-
+  
+  print('\tMapping NetworkId End...')
   insertMany(detection_result, collection)
   watcherEnd(ctx, start)
   return detection_result
@@ -474,8 +473,16 @@ def similarityMeasurement(query, collection, value=[]):
   listSimilarity=[]
   report = []
   dictOfPattern={}
+  loadingChar = []
   netTraffics = value
-  for activities in netTraffics:
+  lenNetT = len(value)
+  tempProgress = 0
+  for activities in netTraffics: 
+    progress = round(len(activities)/lenNetT*100)
+    if(tempProgress != progress):
+      loadingChar.append('~')
+      tempProgress = progress
+      print(''.join(loadingChar)+str(progress)+'% data scanned!', end="\r")
     del activities['_id']
     activity=activities['NetworkId']
     activitiesLen = len(activity)
