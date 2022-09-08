@@ -124,9 +124,10 @@ def dimentionalReductionMultiProcess(values, collection):
       'lastStartTime': data['lastStartTime']
     }
     detection_result.append(res)
+    insertOne(res, collection)
   
   print('\tMapping NetworkId End...')
-  insertMany(detection_result, collection)
+  # insertMany(detection_result, collection)
   watcherEnd(ctx, start)
   return detection_result
 
