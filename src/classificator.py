@@ -1,7 +1,6 @@
 import csv
 
 from utilities.watcher import *
-from numba import jit
 
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
@@ -22,7 +21,6 @@ algorithmDict = {
   'logisticRegression' : LogisticRegression(C=10000, solver='liblinear')
 }
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def classification(df, train, test, selectedScenario='', algorithm='randomForest'):
   ctx= algorithm.upper()+'-MACHINE LEARNING CLASSIFICATION'
   start= watcherStart(ctx)

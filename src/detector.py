@@ -1,5 +1,4 @@
 import pandas as pd
-from numba import jit
 
 import src.classificator as cl
 import src.dataSplitter as ds
@@ -23,7 +22,6 @@ def recons():
 	print(DEFAULT_COLUMN)
 	watcherEnd(ctx, start)
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def detectionWithMachineLearning(datasetName, selectedScenario):
   raw_df = loader.loadDataset(datasetName, selectedScenario)
   df = pp.preProcessing(raw_df) #preProcessed dataframe
@@ -40,7 +38,6 @@ def detectionWithMachineLearning(datasetName, selectedScenario):
 
   return botnet_df, normal_df
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def detectionWithLabel(datasetName, selectedScenario): #not intended for anything else except of a knowledgebase
   df = loader.loadDataset(datasetName, selectedScenario)
   df['ActivityLabel'] = df['Label'].str.contains('botnet', case=False, regex=True).astype(int)

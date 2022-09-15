@@ -1,7 +1,6 @@
 import os
 import bson
 import pymongo
-from numba import jit
 
 from utilities.watcher import *
 from utilities.globalConfig import MONGO_URL, MONGO_DATABASE, MONGO_COLLECTION_DEFAULT, MONGO_DUMP_PATH
@@ -14,51 +13,43 @@ dumpPath = MONGO_DUMP_PATH
 dumpDefaultCollections = ['sequentialActivities', 'uniquePattern']
 
 #commmand
-@jit(nopython=True) # Set "nopython" mode for best performance
 def insertOne(dictData, collectionName=defaultCollection):
   collection = database[collectionName]
   row = collection.insert_one(dictData)
   # print("success insert with id: "+str(row.inserted_id))
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def insertMany(listData, collectionName=defaultCollection):
   collection = database[collectionName]
   row = collection.insert_many(listData)
   # print("\t..Success insert into "+collectionName)
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def upsertOne(query, record, collectionName=defaultCollection):
   collection = database[collectionName]
   collection.replace_one(query, record, upsert=True)
   # print("Success upsert ", str(query))
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def updateMany(query, record, collectionName=defaultCollection):
   collection = database[collectionName]
   collection.update_many(query, record)
   # print("\t..Success updateMany")
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def deleteOne(query, collectionName=defaultCollection):
   collection = database[collectionName]
   collection.delete_one(query)
   print("\t..Success delete one", str(query))
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def deleteMany(query, collectionName=defaultCollection):
   collection = database[collectionName]
   collection.delete_many(query)
   print("\t..Success delete many ", str(query))
 
 #query
-@jit(nopython=True) # Set "nopython" mode for best performance
 def findOne(query={}, collectionName=defaultCollection):
   collection = database[collectionName]
   doc = collection.find_one(query)
 
   return doc
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def aggregate(pipeline, collectionName=defaultCollection):
   result = []
   collection = database[collectionName]
@@ -69,7 +60,6 @@ def aggregate(pipeline, collectionName=defaultCollection):
 
   return result
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def dump(collections=dumpDefaultCollections):
   ctx='MONGO-DUMP'
   start = watcherStart(ctx)
@@ -83,7 +73,6 @@ def dump(collections=dumpDefaultCollections):
   
   watcherEnd(ctx, start)
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def restore():
   ctx='MONGO-RESTORE'
   start = watcherStart(ctx)

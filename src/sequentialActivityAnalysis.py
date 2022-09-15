@@ -12,7 +12,6 @@ from datetime import datetime
 from numpy.linalg import norm
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
-from numba import jit
 
 collectionUniquePattern = 'uniquePattern'
 attackStageLength = ATTACK_STAGE_LENGTH #in second
@@ -24,7 +23,6 @@ def missingValue(dataFrame):
     Dtypes = dataFrame.dtypes
     return pd.concat([total, Percentage,Dtypes], axis=1, keys=['Total', 'Percentage','Dtypes'])
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def dimentionalReductor(data):
   netT = data['NetworkTraffic']
   header = data['ActivityHeaders']
@@ -139,13 +137,11 @@ def dimentionalReductionMultiProcess(values, collection):
   watcherEnd(ctx, start)
   return detection_result
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def addNetId(data):
   data['NetworkId'] = dimentionalReductor(data)
   data['isScanned'] = True
   return data
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, sources='DATASETS', collectionName=MONGO_COLLECTION_DEFAULT, columns=defaultColumns):
   ctx='SEQUENTIAL ACTIVITY MINING'
   start = watcherStart(ctx)
@@ -337,7 +333,6 @@ def sequentialActivityMiningWithMongo(dataframe, stringDatasetName, datasetDetai
   watcherEnd(ctx, start)
 #deprecated (need analysis)
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def sequentialActivityReduction(stringDatasetName, datasetDetail):
   ctx='SEQUENTIAL ACTIVITY REDUCTION'
   start = watcherStart(ctx)
@@ -477,7 +472,6 @@ def similarityMeasurementMongo(query, collection):
     # print(listSimilarity)
   watcherEnd(ctx, start)
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def similarityMeasurement(query, collection, value=[]):
   ctx='SIMILARITY MEASUREMENT'
   start = watcherStart(ctx)
@@ -557,7 +551,6 @@ def similarityMeasurement(query, collection, value=[]):
     # print(listSimilarity)
   watcherEnd(ctx, start)
 
-@jit(nopython=True) # Set "nopython" mode for best performance
 def reportDocumentation(query):
   ctx='REPORT DOCUMENTATION'
   start = watcherStart(ctx)
