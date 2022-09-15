@@ -27,9 +27,11 @@ def classification(df, train, test, selectedScenario='', algorithm='randomForest
 
   x_df=df.drop(['Label','ActivityLabel'],axis=1)
   y_df=df['ActivityLabel']
-  x_train=train.drop(['StartTime','SrcAddr','DstAddr','Dir','sTos','dTos','Label','ActivityLabel','BotnetName','SensorId'],axis=1)
+  x_train=train.drop(
+    ['StartTime','SrcAddr','DstAddr','Dir','sTos','dTos','Label','ActivityLabel','BotnetName','SensorId'],axis=1, errors='ignore')
   y_train=train['ActivityLabel']
-  x_test=test.drop(['StartTime','SrcAddr','DstAddr','Dir','sTos','dTos','Label','ActivityLabel','BotnetName','SensorId'],axis=1)
+  x_test=test.drop(
+    ['StartTime','SrcAddr','DstAddr','Dir','sTos','dTos','Label','ActivityLabel','BotnetName','SensorId'],axis=1, errors='ignore')
   y_test=test['ActivityLabel']
 
   model = algorithmDict[algorithm]
