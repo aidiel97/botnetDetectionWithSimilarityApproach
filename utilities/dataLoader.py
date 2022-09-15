@@ -1,4 +1,5 @@
 import pandas as pd
+from numba import jit
 
 from utilities.watcher import *
 from utilities.globalConfig import DATASET_LOCATION, CTU_DIR, NCC_DIR, NCC2_DIR
@@ -89,6 +90,7 @@ listAvailableDatasets=[
   },
 ]
 
+@jit(nopython=True) # Set "nopython" mode for best performance
 def loadDataset(dataset, scenario):
   ctx='DATASET LOADER'
   start = watcherStart(ctx)
