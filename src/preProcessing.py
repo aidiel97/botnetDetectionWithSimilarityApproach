@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 import socket, struct
 import seaborn as sns
@@ -16,6 +17,17 @@ def ipToInteger(ip):
     return struct.unpack("!L", packedIP)[0]
   except OSError:
     return np.nan #return NaN when IP Address is not valid
+
+def labelProcessing(label):
+  listOfWord = label.split("-")
+  validateArray = []
+  for char in listOfWord:
+    if(bool(re.search(r'\d', char)) or char == 'From' or char == 'Botnet'):
+      continue
+    else:
+      validateArray.append(char)
+
+  return '-'.join(validateArray)
 
 def transformation(df, ipv4ToInteger=False, oneHotEncode=False):
   ctx= '<PRE-PROCESSING> Transformation'
@@ -90,6 +102,7 @@ def labelGenerator(df):
   df['DiffWithPreviousAttack'] = pd.to_datetime(df['StartTime']) - pd.to_datetime(df['t1'])
   df['DiffWithPreviousAttack'] = df['DiffWithPreviousAttack'].dt.total_seconds()
   df['NetworkActivity'] = df['Label'].str[5:] #slicing, remove flow=
+  df['NetworkActivity'] = df['NetworkActivity'].apply(labelProcessing) #slicing, remove flow=
 
   # watcherEnd(ctx, start)
   return df

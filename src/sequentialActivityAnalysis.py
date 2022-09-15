@@ -11,6 +11,7 @@ from utilities.globalConfig import DEFAULT_COLUMN, ATTACK_STAGE_LENGTH, MONGO_CO
 from datetime import datetime
 from numpy.linalg import norm
 from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 collectionUniquePattern = 'uniquePattern'
 attackStageLength = ATTACK_STAGE_LENGTH #in second
@@ -124,7 +125,12 @@ def dimentionalReductionMultiProcess(values, collection):
       'lastStartTime': data['lastStartTime']
     }
     detection_result.append(res)
-    insertOne(res, collection)
+    try:
+      insertOne(res, collection)
+    except:
+      print('error insert, modify networkId')
+      res['NetworkId'] = []
+      insertOne(res, collection)
   
   print('\tMapping NetworkId End...')
   # insertMany(detection_result, collection)
@@ -363,7 +369,7 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
     uniquePattern = findOne(x['name'])
     scannedPattern = findOne(x['name'], collectionUniquePattern)
     if(scannedPattern == None):
-      uniquePattern['NetworkId'] = dimentionalReductor(uniquePattern)
+      # uniquePattern['NetworkId'] = dimentionalReductor(uniquePattern) #no dimentional reduction
       insertOne(uniquePattern, collectionUniquePattern)
   #end of reduce the duplicate
 
@@ -377,7 +383,7 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
   manyUnscanned = aggregate(pipelineUnscanned)
   manyUnscannedIdentical = aggregate(pipelineUnscanned, collectionUniquePattern)
   if(manyUnscannedIdentical == []):
-    manyUnscanned = map(addNetId, manyUnscanned)
+    # manyUnscanned = map(addNetId, manyUnscanned) #no dimentional reduction
     insertMany(manyUnscanned, collectionUniquePattern)
     updateMany(queryUnscanned,{
       '$set':{

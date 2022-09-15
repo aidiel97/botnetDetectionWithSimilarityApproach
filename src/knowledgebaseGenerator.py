@@ -22,6 +22,11 @@ def singleDatasetDetail(settings={}, withMachineLearning=True):
   else:
     botnet_df, normal_df = detect.detectionWithLabel(datasetName, selected)
 
+  # print(botnet_df.shape)
+  # bots = botnet_df.SrcAddr.unique()
+  # print(bots)
+  # botCom = botnet_df[botnet_df['SrcAddr'].isin(bots)]
+  # print(botCom.DstAddr.unique())
   botnet_df = pp.labelGenerator(botnet_df)
   saa.sequentialActivityMining(botnet_df, stringDatasetName, datasetDetail)
   saa.sequentialActivityReduction(stringDatasetName, datasetDetail)
