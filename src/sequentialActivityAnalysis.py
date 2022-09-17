@@ -41,7 +41,7 @@ def dimentionalReductor(data):
   networkId = truncatedSVD.fit_transform(new_df)
   netId = []
   for x in networkId:
-    netId.append(x[0])
+    netId.append(round(x[0], 3)) #limit only 3 digit after decimal
 
   return netId
 
@@ -482,7 +482,39 @@ def cosineSimilarity(activity, pattern):
 
   return tempSimilarity
 
-# def errorSimilarity()
+def similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId):
+  for p in samePattern:      
+      # pattern=p['NetworkActivities']
+      pattern=p['NetworkId']
+
+      tempSimilarity = cosineSimilarity(activity, pattern)
+      #butuh perbaikan
+      if(len(activity) == 1):
+        tempSimilarity = norm(activity[0]-pattern[0])/(activity[0]+pattern[0])/2 # compute with difference formula
+      else:
+        tempSimilarity = np.dot(activity,pattern)/(norm(activity)*norm(pattern)) # compute with cosine similarity
+      #butuh perbaikan
+
+      if(p['FromDatasets']=='ctu' and tempSimilarity>similaritySpo):
+        similaritySpo= tempSimilarity
+        patternSpoId =p['SequentialActivityId']
+      elif(p['FromDatasets']=='ncc' and tempSimilarity>similarityPer):
+        similarityPer= tempSimilarity
+        patternPerId =p['SequentialActivityId']
+      elif(p['FromDatasets']=='ncc2' and tempSimilarity>similaritySim):
+        similaritySim= tempSimilarity
+        patternSimId =p['SequentialActivityId']
+      else:
+        continue
+  
+  return {
+    'patternSpoId': patternSpoId,
+    'similaritySpo': similaritySpo,
+    'patternPerId': patternPerId,
+    'similarityPer': similarityPer,
+    'pattermSimId': patternSimId,
+    'similaritySim': similaritySim,
+  }
 
 def similarityMeasurement(query, collection, value=[]):
   ctx='SIMILARITY MEASUREMENT'
@@ -528,36 +560,35 @@ def similarityMeasurement(query, collection, value=[]):
     patternSpoId = ''
     patternSimId = ''
     #start Scanning
-    for p in samePattern:      
-      # pattern=p['NetworkActivities']
-      pattern=p['NetworkId']
-
-      tempSimilarity = cosineSimilarity(activity, pattern)
-      #butuh perbaikan
-      if(activitiesLen == 1):
-        tempSimilarity = norm(activity[0]-pattern[0])/(activity[0]+pattern[0])/2 # compute with difference formula
+    if(activitiesLen == 1):
+      firstScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
+      pipelineCheckShortLen = [
+          { '$addFields': { 'lenAct': { '$size': '$NetworkActivities' } } },
+          { '$match': { "lenAct": { '$ne':1} } },
+          { '$unwind':'$NetworkId' },
+          { '$match': {'NetworkId': activity[0] } }
+      ]
+      validate = aggregate(pipelineCheckShortLen, collectionUniquePattern)
+      if(validate == []):
+        similarityScanning = {
+          'patternSpoId': firstScanning.patternSpoId,
+          'similaritySpo': firstScanning.similaritySpo/2,
+          'patternPerId': firstScanning.patternPerId,
+          'similarityPer': firstScanning.similarityPer/2,
+          'pattermSimId': firstScanning.patternSimId,
+          'similaritySim': firstScanning.similaritySim/2,
+        }
       else:
-        tempSimilarity = np.dot(activity,pattern)/(norm(activity)*norm(pattern)) # compute with cosine similarity
-      #butuh perbaikan
-
-      if(p['FromDatasets']=='ctu' and tempSimilarity>similaritySpo):
-        similaritySpo= tempSimilarity
-        patternSpoId =p['SequentialActivityId']
-      elif(p['FromDatasets']=='ncc' and tempSimilarity>similaritySpo):
-        similarityPer= tempSimilarity
-        patternPerId =p['SequentialActivityId']
-      elif(p['FromDatasets']=='ncc2' and tempSimilarity>similaritySim):
-        similaritySim= tempSimilarity
-        patternSimId =p['SequentialActivityId']
-      else:
-        continue
+        similarityScanning = firstScanning
+    else:
+      similarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
     
-    activities['SimilarityScoreSpo'] = similaritySpo
-    activities['SimilarityScorePer'] = similarityPer
-    activities['SimilarityScoreSim'] = similaritySim
-    activities['PatternSpoId'] = patternSpoId
-    activities['PatternPerId'] = patternPerId
-    activities['PatternSimId'] = patternSimId
+    activities['SimilarityScoreSpo'] = similarityScanning['similaritySpo']
+    activities['SimilarityScorePer'] = similarityScanning['similarityPer']
+    activities['SimilarityScoreSim'] = similarityScanning['similaritySim']
+    activities['PatternSpoId'] = similarityScanning['patternSpoId']
+    activities['PatternPerId'] = similarityScanning['patternPerId']
+    activities['PatternSimId'] = similarityScanning['patternSimId']
     report.append(activities)
 
   deleteMany(query, collectionReport) #overwrite same source file report
