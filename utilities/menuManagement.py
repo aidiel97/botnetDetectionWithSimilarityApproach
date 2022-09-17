@@ -34,6 +34,10 @@ listMenu =[
     'functionName': detect.detectionWithSimilarity
   },
   {
+    'title': '[Multiple Detection] Botnet Detection With Similarity Approach',
+    'functionName': detect.detectionWithSimilarityMulti
+  },
+  {
     'title': 'EXIT',
     'functionName': exit
   }

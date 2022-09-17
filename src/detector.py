@@ -58,7 +58,6 @@ def detectionWithSimilarity():
   stringDatasetName = loader.listAvailableDatasets[int(datasetIndex)]['shortName']
   start= watcherStart(ctx)
 
-
   selected = 'scenario'+str(datasetDetail)
   print('\tProcessing dataset '+stringDatasetName+' scenario/sensors '+str(datasetDetail)+'...')
   # df = pd.read_csv(choosenDir)
@@ -75,5 +74,35 @@ def detectionWithSimilarity():
   vectors = saa.dimentionalReductionMultiProcess(values, detectionResultCollectionName)
   saa.similarityMeasurement(sourcesQuery, detectionResultCollectionName, vectors)
   # saa.reportDocumentation(sourcesQuery)
+
+  watcherEnd(ctx, start)
+
+
+def detectionWithSimilarityMulti():
+  ctx = 'DETECTION WITH SIMILARITY MULTI PROCESS'
+  detectionResultCollectionName = 'detection-result'
+
+  datasetIndex = menu.getListDatasetMenu()
+  datasetName = loader.listAvailableDatasets[int(datasetIndex)]['list']
+  stringDatasetName = loader.listAvailableDatasets[int(datasetIndex)]['shortName']
+  listSubDataset = loader.listAvailableDatasets[int(datasetIndex)]['list']
+  start= watcherStart(ctx)
+  
+  for datasetDetail in range(1, len(listSubDataset)+1):
+    selected = 'scenario'+str(datasetDetail)
+    print('\tProcessing dataset '+stringDatasetName+' scenario/sensors '+str(datasetDetail)+'...')
+    # df = pd.read_csv(choosenDir)
+    df = loader.loadDataset(datasetName, selected)
+
+    df['ActivityLabel'] = df['Label'].str.contains('botnet', case=False, regex=True).astype(int)
+    df = pp.labelGenerator(df)
+    df.sort_values(by='StartTime', inplace=True)
+    df.reset_index(drop=True, inplace=True)
+
+    sourcesQuery = { 'sources': selected }
+    values = saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, selected, detectionResultCollectionName)
+    vectors = saa.dimentionalReductionMultiProcess(values, detectionResultCollectionName)
+    saa.similarityMeasurement(sourcesQuery, detectionResultCollectionName, vectors)
+    # saa.reportDocumentation(sourcesQuery)
 
   watcherEnd(ctx, start)

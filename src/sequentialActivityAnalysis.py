@@ -512,7 +512,7 @@ def similarityScanning(samePattern, activity, similaritySpo, similarityPer, simi
     'similaritySpo': similaritySpo,
     'patternPerId': patternPerId,
     'similarityPer': similarityPer,
-    'pattermSimId': patternSimId,
+    'patternSimId': patternSimId,
     'similaritySim': similaritySim,
   }
 
@@ -579,12 +579,12 @@ def similarityMeasurement(query, collection, value=[]):
       validate = aggregate(pipelineCheckShortLen, collectionUniquePattern)
       if(validate == []):
         resSimilarityScanning = {
-          'patternSpoId': firstScanning.patternSpoId,
-          'similaritySpo': firstScanning.similaritySpo/2,
-          'patternPerId': firstScanning.patternPerId,
-          'similarityPer': firstScanning.similarityPer/2,
-          'pattermSimId': firstScanning.patternSimId,
-          'similaritySim': firstScanning.similaritySim/2,
+          'patternSpoId': firstScanning['patternSpoId'],
+          'similaritySpo': firstScanning['similaritySpo']/2,
+          'patternPerId': firstScanning['patternPerId'],
+          'similarityPer': firstScanning['similarityPer']/2,
+          'patternSimId': firstScanning['patternSimId'],
+          'similaritySim': firstScanning['similaritySim']/2,
         }
       else:
         resSimilarityScanning = firstScanning
