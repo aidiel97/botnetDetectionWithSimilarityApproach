@@ -559,7 +559,7 @@ def similarityMeasurement(query, collection, value=[]):
     patternPerId = ''
     patternSpoId = ''
     patternSimId = ''
-    similarityScanning = {
+    resSimilarityScanning = {
       'patternSpoId': patternSpoId,
       'similaritySpo': similaritySpo,
       'patternPerId': patternPerId,
@@ -578,7 +578,7 @@ def similarityMeasurement(query, collection, value=[]):
       ]
       validate = aggregate(pipelineCheckShortLen, collectionUniquePattern)
       if(validate == []):
-        similarityScanning = {
+        resSimilarityScanning = {
           'patternSpoId': firstScanning.patternSpoId,
           'similaritySpo': firstScanning.similaritySpo/2,
           'patternPerId': firstScanning.patternPerId,
@@ -587,16 +587,16 @@ def similarityMeasurement(query, collection, value=[]):
           'similaritySim': firstScanning.similaritySim/2,
         }
       else:
-        similarityScanning = firstScanning
+        resSimilarityScanning = firstScanning
     else:
-      similarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
+      resSimilarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
     
-    activities['SimilarityScoreSpo'] = similarityScanning['similaritySpo']
-    activities['SimilarityScorePer'] = similarityScanning['similarityPer']
-    activities['SimilarityScoreSim'] = similarityScanning['similaritySim']
-    activities['PatternSpoId'] = similarityScanning['patternSpoId']
-    activities['PatternPerId'] = similarityScanning['patternPerId']
-    activities['PatternSimId'] = similarityScanning['patternSimId']
+    activities['SimilarityScoreSpo'] = resSimilarityScanning['similaritySpo']
+    activities['SimilarityScorePer'] = resSimilarityScanning['similarityPer']
+    activities['SimilarityScoreSim'] = resSimilarityScanning['similaritySim']
+    activities['PatternSpoId'] = resSimilarityScanning['patternSpoId']
+    activities['PatternPerId'] = resSimilarityScanning['patternPerId']
+    activities['PatternSimId'] = resSimilarityScanning['patternSimId']
     report.append(activities)
 
   deleteMany(query, collectionReport) #overwrite same source file report
