@@ -495,7 +495,7 @@ def similarityMeasurement(query, collection, value=[]):
   loadingChar = []
   netTraffics = value
   for activities in netTraffics:
-    # del activities['_id']
+    del activities['_id']
     # activity=activities['NetworkActivities']
     activity=activities['NetworkId']
     activitiesLen = len(activity)
@@ -504,7 +504,7 @@ def similarityMeasurement(query, collection, value=[]):
     similaritySim = 0
 
     #check if pattern isalready get before
-    if(activitiesLen==0):
+    if(activitiesLen==0 or activitiesLen>21407):
       activities['SimilarityScorePer'] = 0
       activities['SimilarityScoreSpo'] = 0
       activities['SimilarityScoreSim'] = 0
@@ -515,7 +515,7 @@ def similarityMeasurement(query, collection, value=[]):
       patternCharacteristicPipeline=[
         {
           '$match':{
-            'NetworkActivities':{ '$size': activitiesLen }
+            'NetworkId':{ '$size': activitiesLen }
           }
         }
       ]
