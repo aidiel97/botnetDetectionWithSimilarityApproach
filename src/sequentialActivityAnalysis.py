@@ -30,11 +30,11 @@ def dimentionalReductor(data):
   df= pd.DataFrame(netT, columns=header, dtype=float)
   df= transformation(df, False)
   new_df= df.drop(
-          ["StartTime","SrcAddr","Dir","DstAddr","Dport","sTos","dTos","Label","ActivityLabel","NetworkActivity"]
+          ["StartTime","SrcAddr","Dir","DstAddr","Dport","sTos","dTos","Label","ActivityLabel","NetworkActivity","DiffWithPreviousAttack"]
           ,axis=1, errors='ignore')
   new_df['Sport'] = new_df['Sport'].replace('',0).fillna(0).astype(int, errors='ignore')
   new_df['Sport'] = new_df['Sport'].apply(str).apply(int, base=16) #handler icmp port
-  new_df['DiffWithPreviousAttack'] = new_df['DiffWithPreviousAttack'].fillna(0).apply(str)
+  # new_df['DiffWithPreviousAttack'] = new_df['DiffWithPreviousAttack'].fillna(0).apply(str)
   new_df['position'] = df.index
   
   truncatedSVD=TruncatedSVD(1)
@@ -369,7 +369,7 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
     uniquePattern = findOne(x['name'])
     scannedPattern = findOne(x['name'], collectionUniquePattern)
     if(scannedPattern == None):
-      # uniquePattern['NetworkId'] = dimentionalReductor(uniquePattern) #no dimentional reduction
+      uniquePattern['NetworkId'] = dimentionalReductor(uniquePattern) #no dimentional reduction
       insertOne(uniquePattern, collectionUniquePattern)
   #end of reduce the duplicate
 
@@ -383,7 +383,7 @@ def sequentialActivityReduction(stringDatasetName, datasetDetail):
   manyUnscanned = aggregate(pipelineUnscanned)
   manyUnscannedIdentical = aggregate(pipelineUnscanned, collectionUniquePattern)
   if(manyUnscannedIdentical == []):
-    # manyUnscanned = map(addNetId, manyUnscanned) #no dimentional reduction
+    manyUnscanned = map(addNetId, manyUnscanned) #no dimentional reduction
     insertMany(manyUnscanned, collectionUniquePattern)
     updateMany(queryUnscanned,{
       '$set':{
@@ -472,6 +472,18 @@ def similarityMeasurementMongo(query, collection):
     # print(listSimilarity)
   watcherEnd(ctx, start)
 
+def cosineSimilarity(activity, pattern):
+  #butuh perbaikan
+  if(len(activity) == 1):
+    tempSimilarity = norm(activity[0]-pattern[0])/(activity[0]+pattern[0])/2 # compute with difference formula
+  else:
+    tempSimilarity = np.dot(activity,pattern)/(norm(activity)*norm(pattern)) # compute with cosine similarity
+  #butuh perbaikan
+
+  return tempSimilarity
+
+# def errorSimilarity()
+
 def similarityMeasurement(query, collection, value=[]):
   ctx='SIMILARITY MEASUREMENT'
   start = watcherStart(ctx)
@@ -483,7 +495,8 @@ def similarityMeasurement(query, collection, value=[]):
   loadingChar = []
   netTraffics = value
   for activities in netTraffics:
-    del activities['_id']
+    # del activities['_id']
+    # activity=activities['NetworkActivities']
     activity=activities['NetworkId']
     activitiesLen = len(activity)
     similarityPer = 0
@@ -491,7 +504,7 @@ def similarityMeasurement(query, collection, value=[]):
     similaritySim = 0
 
     #check if pattern isalready get before
-    if(activitiesLen==0 or activitiesLen>21407):
+    if(activitiesLen==0):
       activities['SimilarityScorePer'] = 0
       activities['SimilarityScoreSpo'] = 0
       activities['SimilarityScoreSim'] = 0
@@ -502,7 +515,7 @@ def similarityMeasurement(query, collection, value=[]):
       patternCharacteristicPipeline=[
         {
           '$match':{
-            'NetworkId':{ '$size': activitiesLen }
+            'NetworkActivities':{ '$size': activitiesLen }
           }
         }
       ]
@@ -516,12 +529,16 @@ def similarityMeasurement(query, collection, value=[]):
     patternSimId = ''
     #start Scanning
     for p in samePattern:      
+      # pattern=p['NetworkActivities']
       pattern=p['NetworkId']
 
+      tempSimilarity = cosineSimilarity(activity, pattern)
+      #butuh perbaikan
       if(activitiesLen == 1):
         tempSimilarity = norm(activity[0]-pattern[0])/(activity[0]+pattern[0])/2 # compute with difference formula
       else:
         tempSimilarity = np.dot(activity,pattern)/(norm(activity)*norm(pattern)) # compute with cosine similarity
+      #butuh perbaikan
 
       if(p['FromDatasets']=='ctu' and tempSimilarity>similaritySpo):
         similaritySpo= tempSimilarity
