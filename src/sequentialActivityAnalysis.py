@@ -559,6 +559,14 @@ def similarityMeasurement(query, collection, value=[]):
     patternPerId = ''
     patternSpoId = ''
     patternSimId = ''
+    similarityScanning = {
+      'patternSpoId': patternSpoId,
+      'similaritySpo': similaritySpo,
+      'patternPerId': patternPerId,
+      'similarityPer': similarityPer,
+      'pattermSimId': patternSimId,
+      'similaritySim': similaritySim,
+    }
     #start Scanning
     if(activitiesLen == 1):
       firstScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
