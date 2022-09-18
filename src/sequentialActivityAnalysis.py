@@ -579,7 +579,7 @@ def similarityMeasurement(query, collection, value=[]):
     #start Scanning
     if(activitiesLen == 1):
       firstScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
-      if(activities['NetworkActivities'] not in validator):
+      if(activities['NetworkActivities'][0] not in validator):
         resSimilarityScanning = {
           'patternSpoId': firstScanning['patternSpoId'],
           'similaritySpo': firstScanning['similaritySpo']/2,
