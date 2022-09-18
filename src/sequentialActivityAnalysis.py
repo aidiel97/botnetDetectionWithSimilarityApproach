@@ -527,14 +527,14 @@ def similarityMeasurement(query, collection, value=[]):
   dictOfPattern={}
   loadingChar = []
   netTraffics = value
-  pipelineCheckShortLen = [
-      { '$addFields': { 'lenAct': { '$size': '$NetworkActivities' } } },
-      { '$match': { "lenAct": { '$ne':1 } } },
-      { '$unwind':'$NetworkActivities' },
-      { '$project':{ 'NetworkActivity':'$NetworkActivities' } }
-  ]
-  validate = aggregate(pipelineCheckShortLen, collectionUniquePattern)
-  validator = [k['NetworkActivity'] for k in validate]
+  # pipelineCheckShortLen = [
+  #     { '$addFields': { 'lenAct': { '$size': '$NetworkActivities' } } },
+  #     { '$match': { "lenAct": { '$ne':1 } } },
+  #     { '$unwind':'$NetworkActivities' },
+  #     { '$project':{ 'NetworkActivity':'$NetworkActivities' } }
+  # ]
+  # validate = aggregate(pipelineCheckShortLen, collectionUniquePattern)
+  # validator = [k['NetworkActivity'] for k in validate]
   for activities in netTraffics:
     del activities['_id']
     # activity=activities['NetworkActivities']
@@ -568,30 +568,23 @@ def similarityMeasurement(query, collection, value=[]):
     patternPerId = ''
     patternSpoId = ''
     patternSimId = ''
-    resSimilarityScanning = {
-      'patternSpoId': patternSpoId,
-      'similaritySpo': similaritySpo,
-      'patternPerId': patternPerId,
-      'similarityPer': similarityPer,
-      'pattermSimId': patternSimId,
-      'similaritySim': similaritySim,
-    }
     #start Scanning
-    if(activitiesLen == 1):
-      firstScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
-      if(activities['NetworkActivities'][0] not in validator):
-        resSimilarityScanning = {
-          'patternSpoId': firstScanning['patternSpoId'],
-          'similaritySpo': firstScanning['similaritySpo']/2,
-          'patternPerId': firstScanning['patternPerId'],
-          'similarityPer': firstScanning['similarityPer']/2,
-          'patternSimId': firstScanning['patternSimId'],
-          'similaritySim': firstScanning['similaritySim']/2,
-        }
-      else:
-        resSimilarityScanning = firstScanning
-    else:
-      resSimilarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
+    # if(activitiesLen == 1):
+    #   firstScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
+    #   if( validator.count(activities['NetworkActivities'][0])/len(validator) < 0.001 ): #invalid if this activities show lower than 0.001% in KB
+    #     resSimilarityScanning = {
+    #       'patternSpoId': firstScanning['patternSpoId'],
+    #       'similaritySpo': firstScanning['similaritySpo']/2,
+    #       'patternPerId': firstScanning['patternPerId'],
+    #       'similarityPer': firstScanning['similarityPer']/2,
+    #       'patternSimId': firstScanning['patternSimId'],
+    #       'similaritySim': firstScanning['similaritySim']/2,
+    #     }
+    #   else:
+    #     resSimilarityScanning = firstScanning
+    # else:
+    #   resSimilarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
+    resSimilarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
     
     activities['SimilarityScoreSpo'] = resSimilarityScanning['similaritySpo']
     activities['SimilarityScorePer'] = resSimilarityScanning['similarityPer']

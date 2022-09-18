@@ -4,7 +4,7 @@ import src.detector as detect
 import utilities.menuManagement as menu
 import utilities.dataLoader as loader
 
-def singleDatasetDetail(settings={}, withMachineLearning=True):
+def singleDatasetDetail(settings={}, withMachineLearning=False):
   if(settings=={}):
     datasetIndex = menu.getListDatasetMenu()
     datasetName = loader.listAvailableDatasets[int(datasetIndex)]['list']
