@@ -116,6 +116,7 @@ def dimentionalReductionMultiProcess(values, collection):
       'SrcAddr': data['SrcAddr'],
       'DstAddr': data['DstAddr'],
       'NetworkId': data['NetworkId'],
+      'NetworkActivities': data['NetworkActivities'],
       'FromDatasets': data['FromDatasets'],
       'DatasetsDetails': data['DatasetsDetails'],
       'CreatedAt': datetime.now(),
