@@ -526,6 +526,14 @@ def similarityMeasurement(query, collection, value=[]):
   dictOfPattern={}
   loadingChar = []
   netTraffics = value
+  pipelineCheckShortLen = [
+      { '$addFields': { 'lenAct': { '$size': '$NetworkActivities' } } },
+      { '$match': { "lenAct": { '$ne':1 } } },
+      { '$unwind':'$NetworkActivities' },
+      { '$project':{ 'NetworkActivity':'$NetworkActivities' } }
+  ]
+  validate = aggregate(pipelineCheckShortLen, collectionUniquePattern)
+  validator = [k['NetworkActivity'] for k in validate]
   for activities in netTraffics:
     del activities['_id']
     # activity=activities['NetworkActivities']
@@ -569,24 +577,18 @@ def similarityMeasurement(query, collection, value=[]):
     }
     #start Scanning
     if(activitiesLen == 1):
-      pipelineCheckShortLen = [
-          { '$addFields': { 'lenAct': { '$size': '$NetworkActivities' } } },
-          { '$match': { "lenAct": { '$ne':1 } } },
-          { '$unwind':'$NetworkId' },
-          { '$match': {'NetworkId': activity[0] } }
-      ]
-      validate = aggregate(pipelineCheckShortLen, collectionUniquePattern)
-      if(validate == []):
+      firstScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
+      if(activities['NetworkActivities'] not in validator):
         resSimilarityScanning = {
-          'patternSpoId': patternSpoId,
-          'similaritySpo': similaritySpo,
-          'patternPerId': patternPerId,
-          'similarityPer': similarityPer,
-          'patternSimId': patternSimId,
-          'similaritySim': similaritySim,
+          'patternSpoId': firstScanning['patternSpoId'],
+          'similaritySpo': firstScanning['similaritySpo']/2,
+          'patternPerId': firstScanning['patternPerId'],
+          'similarityPer': firstScanning['similarityPer']/2,
+          'patternSimId': firstScanning['patternSimId'],
+          'similaritySim': firstScanning['similaritySim']/2,
         }
       else:
-        resSimilarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
+        resSimilarityScanning = firstScanning
     else:
       resSimilarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
     
