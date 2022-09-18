@@ -569,25 +569,24 @@ def similarityMeasurement(query, collection, value=[]):
     }
     #start Scanning
     if(activitiesLen == 1):
-      firstScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
       pipelineCheckShortLen = [
           { '$addFields': { 'lenAct': { '$size': '$NetworkActivities' } } },
-          { '$match': { "lenAct": { '$ne':1} } },
+          { '$match': { "lenAct": { '$ne':1 } } },
           { '$unwind':'$NetworkId' },
           { '$match': {'NetworkId': activity[0] } }
       ]
       validate = aggregate(pipelineCheckShortLen, collectionUniquePattern)
       if(validate == []):
         resSimilarityScanning = {
-          'patternSpoId': firstScanning['patternSpoId'],
-          'similaritySpo': firstScanning['similaritySpo']/2,
-          'patternPerId': firstScanning['patternPerId'],
-          'similarityPer': firstScanning['similarityPer']/2,
-          'patternSimId': firstScanning['patternSimId'],
-          'similaritySim': firstScanning['similaritySim']/2,
+          'patternSpoId': patternSpoId,
+          'similaritySpo': similaritySpo,
+          'patternPerId': patternPerId,
+          'similarityPer': similarityPer,
+          'patternSimId': patternSimId,
+          'similaritySim': similaritySim,
         }
       else:
-        resSimilarityScanning = firstScanning
+        resSimilarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
     else:
       resSimilarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
     
