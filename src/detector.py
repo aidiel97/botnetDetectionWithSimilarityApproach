@@ -98,11 +98,12 @@ def detectionWithSimilarityMulti():
     df = pp.labelGenerator(df)
     df.sort_values(by='StartTime', inplace=True)
     df.reset_index(drop=True, inplace=True)
+    df = pp.transformation(df, True)
 
     sourcesQuery = { 'sources': selected }
     values = saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, selected, detectionResultCollectionName)
-    vectors = saa.dimentionalReductionMultiProcess(values, detectionResultCollectionName)
-    saa.similarityMeasurement(sourcesQuery, detectionResultCollectionName, vectors)
+    # vectors = saa.dimentionalReductionMultiProcess(values, detectionResultCollectionName)
+    saa.similarityMeasurement(sourcesQuery, detectionResultCollectionName, values)
     # saa.reportDocumentation(sourcesQuery)
 
   watcherEnd(ctx, start)
