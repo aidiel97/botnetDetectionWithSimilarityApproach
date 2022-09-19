@@ -474,12 +474,18 @@ def similarityMeasurementMongo(query, collection):
   watcherEnd(ctx, start)
 
 def cosineSimilarity(activity, pattern):
-  #butuh perbaikan
-  if(len(activity) == 1):
-    tempSimilarity = norm(activity[0]-pattern[0])/(activity[0]+pattern[0])/2 # compute with difference formula
-  else:
-    tempSimilarity = np.dot(activity,pattern)/(norm(activity)*norm(pattern)) # compute with cosine similarity
-  #butuh perbaikan
+  # #butuh perbaikan
+  # if(len(activity) == 1):
+  #   tempSimilarity = norm(activity[0]-pattern[0])/(activity[0]+pattern[0])/2 # compute with difference formula
+  # else:
+  #   tempSimilarity = np.dot(activity,pattern)/(norm(activity)*norm(pattern)) # compute with cosine similarity
+  # #butuh perbaikan
+  sim = 0
+  for i in activity:
+    tempSimilarity = norm(activity[i]-pattern[i])/(activity[i]+pattern[i])/2
+    sim += tempSimilarity
+  
+  return sim
 
   return tempSimilarity
 
