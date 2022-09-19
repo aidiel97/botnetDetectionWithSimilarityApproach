@@ -157,7 +157,8 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
   tempProgress = 0
   loadingChar=[]
   for index, row in dataframe.iterrows():
-    netT = [row[x] for x in columns] #stack values in row to array
+    # netT = [row[x] for x in columns] #stack values in row to array
+    netT = [row['Dur'],row['Proto'],row['Sport'],row['Dport'],row['State'],row['sTos'],row['dTos'],row['TotPkts'],row['TotBytes'],row['SrcBytes']]
     del netT[-1] #delete DiffWithPreviousAttack (change it into diff with previous attack with same source and address)
     sequenceIdPrimary = row['SrcAddr']+'-'+row['DstAddr']
     if(sequenceIdPrimary not in repetationOfAttackStages):
