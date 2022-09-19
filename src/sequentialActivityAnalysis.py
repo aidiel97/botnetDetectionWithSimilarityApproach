@@ -492,7 +492,7 @@ def similarityScanning(samePattern, activity, similaritySpo, similarityPer, simi
       pattern=p['NetworkTraffic']
 
       # tempSimilarity = cosineSimilarity(activity, pattern)
-      tempSimilarity = cosine_similarity(activity, pattern).mean()
+      tempSimilarity = cosine_similarity(activity, pattern).diagonal().mean()
 
       if(p['FromDatasets']=='ctu' and tempSimilarity>similaritySpo):
         similaritySpo= tempSimilarity
