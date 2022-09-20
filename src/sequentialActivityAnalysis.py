@@ -158,7 +158,7 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
   loadingChar=[]
   for index, row in dataframe.iterrows():
     # netT = [row[x] for x in columns] #stack values in row to array
-    netT = [row['Dur'],row['Proto'],row['Sport'],row['Dport'],row['State'],row['sTos'],row['dTos'],row['TotPkts'],row['TotBytes'],row['SrcBytes']]
+    netT = [row['Dur'],row['Proto'],row['Sport'],row['Dport'],row['State'],row['TotPkts'],row['TotBytes'],row['SrcBytes']]
     del netT[-1] #delete DiffWithPreviousAttack (change it into diff with previous attack with same source and address)
     sequenceIdPrimary = row['SrcAddr']+'-'+row['DstAddr']
     if(sequenceIdPrimary not in repetationOfAttackStages):
@@ -486,6 +486,7 @@ def cosineSimilarity(activity, pattern):
   return tempSimilarity
 
 def similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId):
+  print(samePattern)
   for p in samePattern:      
       # pattern=p['NetworkActivities']
       # pattern=p['NetworkId']
@@ -493,6 +494,7 @@ def similarityScanning(samePattern, activity, similaritySpo, similarityPer, simi
 
       # tempSimilarity = cosineSimilarity(activity, pattern)
       tempSimilarity = cosine_similarity(activity, pattern).diagonal().mean()
+      print(cosine_similarity(activity, pattern))
 
       if(p['FromDatasets']=='ctu' and tempSimilarity>similaritySpo):
         similaritySpo= tempSimilarity
@@ -506,6 +508,7 @@ def similarityScanning(samePattern, activity, similaritySpo, similarityPer, simi
       else:
         continue
   
+  print('kelar')
   return {
     'patternSpoId': patternSpoId,
     'similaritySpo': similaritySpo,
@@ -534,7 +537,7 @@ def similarityMeasurement(query, collection, value=[]):
   # validate = aggregate(pipelineCheckShortLen, collectionUniquePattern)
   # validator = [k['NetworkActivity'] for k in validate]
   for activities in netTraffics:
-    del activities['_id']
+    # del activities['_id']
     # activity=activities['NetworkActivities']
     # activity=activities['NetworkId']
     activity=activities['NetworkTraffic']
@@ -555,7 +558,7 @@ def similarityMeasurement(query, collection, value=[]):
       patternCharacteristicPipeline=[
         {
           '$match':{
-            'NetworkId':{ '$size': activitiesLen }
+            'NetworkTraffic':{ '$size': activitiesLen }
           }
         }
       ]
