@@ -70,8 +70,9 @@ def detectionWithSimilarity():
   df.reset_index(drop=True, inplace=True)
   df = pp.transformation(df)
 
-  sourcesQuery = { 'sources': selected }
-  values = saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, selected, detectionResultCollectionName)
+  sources = stringDatasetName+'-'+selected
+  sourcesQuery = { 'sources': sources }
+  values = saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, sources, detectionResultCollectionName)
   saa.similarityMeasurement(sourcesQuery, detectionResultCollectionName, values )
   # saa.reportDocumentation(sourcesQuery)
 
@@ -100,8 +101,9 @@ def detectionWithSimilarityMulti():
     df.reset_index(drop=True, inplace=True)
     df = pp.transformation(df)
 
-    sourcesQuery = { 'sources': selected }
-    values = saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, selected, detectionResultCollectionName)
+    sources = stringDatasetName+'-'+selected
+    sourcesQuery = { 'sources': sources }
+    values = saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, sources, detectionResultCollectionName)
     saa.similarityMeasurement(sourcesQuery, detectionResultCollectionName, values)
     # saa.reportDocumentation(sourcesQuery)
 

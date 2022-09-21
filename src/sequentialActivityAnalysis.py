@@ -467,7 +467,6 @@ def manualAnalysisSimilarity(activities, pattern):
   simOfActivity = 0
   simOfDiffAttackTime = 0
   simPercentageDiffAttackTime = []
-  patternDiffAttackTime = []
   for i in range(len(activity)):
     if(activity[i] == patternAct[i]): simOfActivity+=1
     try:
