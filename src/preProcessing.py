@@ -40,6 +40,9 @@ def transformation(df, ipv4ToInteger=False, oneHotEncode=False):
   df.dropna(subset = ["SrcAddr"], inplace=True)
   df.dropna(subset = ["DstAddr"], inplace=True)
 
+  df['Sport'] = pd.factorize(df.Sport)[0]
+  df['Dport'] = pd.factorize(df.Dport)[0]
+
   if(ipv4ToInteger==True):
     df['SrcAddr'] = df['SrcAddr'].apply(ipToInteger).fillna(0)
     df['DstAddr'] = df['DstAddr'].apply(ipToInteger).fillna(0)
@@ -100,9 +103,10 @@ def labelGenerator(df):
   df['t1'] = df['StartTime'].shift()
   df.reset_index(drop=True, inplace=True) #reset index from parent dataframe
   df['DiffWithPreviousAttack'] = pd.to_datetime(df['StartTime']) - pd.to_datetime(df['t1'])
-  df['DiffWithPreviousAttack'] = df['DiffWithPreviousAttack'].dt.total_seconds()
+  df['DiffWithPreviousAttack'] = df['DiffWithPreviousAttack'].dt.total_seconds().fillna(0)
   df['NetworkActivity'] = df['Label'].str[5:] #slicing, remove flow=
   df['NetworkActivity'] = df['NetworkActivity'].apply(labelProcessing) #slicing, remove flow=
+  df['CategoricalNetworkActivity'] = pd.factorize(df.NetworkActivity)[0]
 
   # watcherEnd(ctx, start)
   return df

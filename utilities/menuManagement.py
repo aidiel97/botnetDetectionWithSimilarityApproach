@@ -18,11 +18,11 @@ listMenu =[
     'functionName': kbgen.multiDatasetDetail
   },
   {
-    'title': '[Knowledgebase Management] Export(dump) yours',
+    'title': '[Knowledgebase Management] Export(Dump) yours',
     'functionName': mongo.dump
   },
   {
-    'title': '[Knowledgebase Management] Restore',
+    'title': '[Knowledgebase Management] Import(Restore)',
     'functionName': mongo.restore
   },
   {

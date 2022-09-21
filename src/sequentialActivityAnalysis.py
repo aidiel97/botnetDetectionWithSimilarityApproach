@@ -2,6 +2,7 @@ from typing import Collection
 import uuid
 import pandas as pd
 import numpy as np
+import statistics
 
 from src.preProcessing import *
 from utilities.mongoDb import *
@@ -12,6 +13,7 @@ from datetime import datetime
 from numpy.linalg import norm
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics.pairwise import cosine_similarity
 
 collectionUniquePattern = 'uniquePattern'
@@ -157,8 +159,8 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
   tempProgress = 0
   loadingChar=[]
   for index, row in dataframe.iterrows():
-    # netT = [row[x] for x in columns] #stack values in row to array
-    netT = [row['Dur'],row['Proto'],row['Sport'],row['Dport'],row['State'],row['TotPkts'],row['TotBytes'],row['SrcBytes']]
+    netT = [row[x] for x in columns] #stack values in row to array
+    # netT = [row['Dur'],row['Proto'],row['Sport'],row['Dport'],row['State'],row['TotPkts'],row['TotBytes'],row['SrcBytes']]
     del netT[-1] #delete DiffWithPreviousAttack (change it into diff with previous attack with same source and address)
     sequenceIdPrimary = row['SrcAddr']+'-'+row['DstAddr']
     if(sequenceIdPrimary not in repetationOfAttackStages):
@@ -173,6 +175,7 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
       if(diff.seconds <= attackStageLength):
         listOfSequenceData[sequenceId]['NetworkTraffic'].append(netT)
         listOfSequenceData[sequenceId]['NetworkActivities'].append(row['NetworkActivity'])
+        listOfSequenceData[sequenceId]['NetworkId'].append(row['CategoricalNetworkActivity'])
         listOfSequenceData[sequenceId]['modifiedAt'] = datetime.now()
         listOfSequenceData[sequenceId]['lastStartTime'] = row['StartTime']
       else:
@@ -184,7 +187,7 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
         'DstAddr':row['DstAddr'],
         'NetworkTraffic': [netT],
         'NetworkActivities': [row['NetworkActivity']],
-        'NetworkId':[],
+        'NetworkId':[row['CategoricalNetworkActivity']],
         'FromDatasets': stringDatasetName,
         'DatasetsDetails': str(datasetDetail),
         'ActivityHeaders': columns,
@@ -203,7 +206,7 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
         'DstAddr':row['DstAddr'],
         'NetworkTraffic': [netT],
         'NetworkActivities': [row['NetworkActivity']],
-        'NetworkId':[],
+        'NetworkId':[row['CategoricalNetworkActivity']],
         'FromDatasets': stringDatasetName,
         'DatasetsDetails': str(datasetDetail),
         'ActivityHeaders': columns,
@@ -226,36 +229,6 @@ def sequentialActivityMining(dataframe, stringDatasetName, datasetDetail, source
   if sources=='DATASETS':
     insertMany(values, collectionName)
   else:
-    # detection_NetT = [] #new list contain SequentialActivityId, NetworkTraffic
-    # netT = {}
-    # detection_result = []
-    # res = {}
-    # for data in values:
-    #   netT = {
-    #     'SequentialActivityId': data['SequentialActivityId'],
-    #     'NetworkTraffic': data['NetworkTraffic'],
-    #     'NetworkActivities': data['NetworkActivities'],
-    #     'ActivityHeaders': data['ActivityHeaders'],
-    #     'sources': data['sources'],
-    #   }
-    #   res = {
-    #     'SequentialActivityId': data['SequentialActivityId'],
-    #     'SrcAddr': data['SrcAddr'],
-    #     'DstAddr': data['DstAddr'],
-    #     'NetworkId': data['NetworkId'],
-    #     'FromDatasets': data['FromDatasets'],
-    #     'DatasetsDetails': data['DatasetsDetails'],
-    #     'CreatedAt': data['createdAt'],
-    #     'ModifiedAt': data['modifiedAt'],
-    #     'isScanned': False,
-    #     'sources': data['sources'],
-    #     'lastStartTime': data['lastStartTime']
-    #   }
-    #   detection_NetT.append(netT)
-    #   detection_result.append(res)
-
-    # insertMany(detection_NetT, collectionName+'-network-traffic')
-    # insertMany(detection_result, collectionName)
     return values
 
   watcherEnd(ctx, start)
@@ -485,16 +458,35 @@ def cosineSimilarity(activity, pattern):
 
   return tempSimilarity
 
-def similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId):
-  print(samePattern)
-  for p in samePattern:      
-      # pattern=p['NetworkActivities']
-      # pattern=p['NetworkId']
-      pattern=p['NetworkTraffic']
+def manualAnalysisSimilarity(activities, pattern):
+  activity = activities['NetworkActivities']
+  traffic = activities['NetworkTraffic']
+  patternAct = pattern['NetworkActivities']
+  patternTrf = pattern['NetworkTraffic']
 
-      # tempSimilarity = cosineSimilarity(activity, pattern)
-      tempSimilarity = cosine_similarity(activity, pattern).diagonal().mean()
-      print(cosine_similarity(activity, pattern))
+  simOfActivity = 0
+  simOfDiffAttackTime = 0
+  simPercentageDiffAttackTime = []
+  patternDiffAttackTime = []
+  for i in range(len(activity)):
+    if(activity[i] == patternAct[i]): simOfActivity+=1
+    try:
+      error = abs(traffic[i][-1]-patternTrf[i][-1]) / patternTrf[i][-1]
+    except ZeroDivisionError:
+      error = 0
+
+    simPercentageDiffAttackTime.append(1-error)
+
+  simOfDiffAttackTime = statistics.mean(simPercentageDiffAttackTime)
+  meanOfSimActivity = simOfActivity/len(activity)
+
+  similarity = (simOfDiffAttackTime+meanOfSimActivity)/2
+
+  return similarity
+
+def similarityScanning(samePattern, activities, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId):
+  for p in samePattern:      
+      tempSimilarity = manualAnalysisSimilarity(activities,p)
 
       if(p['FromDatasets']=='ctu' and tempSimilarity>similaritySpo):
         similaritySpo= tempSimilarity
@@ -507,8 +499,7 @@ def similarityScanning(samePattern, activity, similaritySpo, similarityPer, simi
         patternSimId =p['SequentialActivityId']
       else:
         continue
-  
-  print('kelar')
+
   return {
     'patternSpoId': patternSpoId,
     'similaritySpo': similaritySpo,
@@ -521,39 +512,20 @@ def similarityScanning(samePattern, activity, similaritySpo, similarityPer, simi
 def similarityMeasurement(query, collection, value=[]):
   ctx='SIMILARITY MEASUREMENT'
   start = watcherStart(ctx)
+  loadingChar = []
+  tempProgress = 0
 
   collectionReport = 'report'
-  listSimilarity=[]
   report = []
   dictOfPattern={}
-  loadingChar = []
   netTraffics = value
-  # pipelineCheckShortLen = [
-  #     { '$addFields': { 'lenAct': { '$size': '$NetworkActivities' } } },
-  #     { '$match': { "lenAct": { '$ne':1 } } },
-  #     { '$unwind':'$NetworkActivities' },
-  #     { '$project':{ 'NetworkActivity':'$NetworkActivities' } }
-  # ]
-  # validate = aggregate(pipelineCheckShortLen, collectionUniquePattern)
-  # validator = [k['NetworkActivity'] for k in validate]
   for activities in netTraffics:
-    # del activities['_id']
-    # activity=activities['NetworkActivities']
-    # activity=activities['NetworkId']
-    activity=activities['NetworkTraffic']
+    activity=activities['NetworkActivities']
     activitiesLen = len(activity)
     similarityPer = 0
     similaritySpo = 0
     similaritySim = 0
 
-    #check if pattern isalready get before
-    # if(activitiesLen==0 or activitiesLen>21407):
-    #   activities['SimilarityScorePer'] = 0
-    #   activities['SimilarityScoreSpo'] = 0
-    #   activities['SimilarityScoreSim'] = 0
-    #   activities['PatternId'] = ''
-    #   report.append(activities)
-    #   continue
     if(activitiesLen not in dictOfPattern):
       patternCharacteristicPipeline=[
         {
@@ -570,23 +542,7 @@ def similarityMeasurement(query, collection, value=[]):
     patternPerId = ''
     patternSpoId = ''
     patternSimId = ''
-    # start Scanning
-    # if(activitiesLen == 1):
-    #   firstScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
-    #   if( validator.count(activities['NetworkActivities'][0])/len(validator) < 0.001 ): #invalid if this activities show lower than 0.001% in KB
-    #     resSimilarityScanning = {
-    #       'patternSpoId': firstScanning['patternSpoId'],
-    #       'similaritySpo': firstScanning['similaritySpo']/2,
-    #       'patternPerId': firstScanning['patternPerId'],
-    #       'similarityPer': firstScanning['similarityPer']/2,
-    #       'patternSimId': firstScanning['patternSimId'],
-    #       'similaritySim': firstScanning['similaritySim']/2,
-    #     }
-    #   else:
-    #     resSimilarityScanning = firstScanning
-    # else:
-    #   resSimilarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
-    resSimilarityScanning = similarityScanning(samePattern, activity, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
+    resSimilarityScanning = similarityScanning(samePattern, activities, similaritySpo, similarityPer, similaritySim, patternPerId, patternSpoId, patternSimId)
     
     activities['SimilarityScoreSpo'] = resSimilarityScanning['similaritySpo']
     activities['SimilarityScorePer'] = resSimilarityScanning['similarityPer']
@@ -595,13 +551,15 @@ def similarityMeasurement(query, collection, value=[]):
     activities['PatternPerId'] = resSimilarityScanning['patternPerId']
     activities['PatternSimId'] = resSimilarityScanning['patternSimId']
     report.append(activities)
+    
+    progress = round(len(report)/len(netTraffics)*100)
+    if(tempProgress != progress):
+      loadingChar.append('~')
+      tempProgress = progress
+      print(''.join(loadingChar)+str(progress)+'% data processed!', end="\r")
 
   deleteMany(query, collectionReport) #overwrite same source file report
   insertMany(report, collectionReport)
-    # if similarity > SIMILARITY_THRESHOLD:
-    #   listSimilarity.append(round(similarity*100))
-  
-    # print(listSimilarity)
   watcherEnd(ctx, start)
 
 def reportDocumentation(query):

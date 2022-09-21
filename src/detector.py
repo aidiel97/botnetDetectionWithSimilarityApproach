@@ -72,7 +72,6 @@ def detectionWithSimilarity():
 
   sourcesQuery = { 'sources': selected }
   values = saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, selected, detectionResultCollectionName)
-  # vectors = saa.dimentionalReductionMultiProcess(values, detectionResultCollectionName)
   saa.similarityMeasurement(sourcesQuery, detectionResultCollectionName, values )
   # saa.reportDocumentation(sourcesQuery)
 
@@ -103,7 +102,6 @@ def detectionWithSimilarityMulti():
 
     sourcesQuery = { 'sources': selected }
     values = saa.sequentialActivityMining(df, stringDatasetName, datasetDetail, selected, detectionResultCollectionName)
-    # vectors = saa.dimentionalReductionMultiProcess(values, detectionResultCollectionName)
     saa.similarityMeasurement(sourcesQuery, detectionResultCollectionName, values)
     # saa.reportDocumentation(sourcesQuery)
 
