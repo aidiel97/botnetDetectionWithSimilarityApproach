@@ -559,7 +559,8 @@ def similarityMeasurement(query, collection, value=[]):
       print(''.join(loadingChar)+str(progress)+'% data processed!', end="\r")
 
   deleteMany(query, collectionReport) #overwrite same source file report
-  insertMany(report, collectionReport)
+  for element in report:
+    insertOne(element, collectionReport)
   watcherEnd(ctx, start)
 
 def reportDocumentation(query):
