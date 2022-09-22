@@ -38,6 +38,10 @@ listMenu =[
     'functionName': detect.detectionWithSimilarityMulti
   },
   {
+    'title': 'Generate Report',
+    'functionName': detect.reportDocumentation
+  },
+  {
     'title': 'EXIT',
     'functionName': exit
   }

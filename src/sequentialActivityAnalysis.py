@@ -578,24 +578,3 @@ def similarityMeasurement(query, collection, value=[]):
       #insert with small dimension
       insertOne(element, collectionReport)
   watcherEnd(ctx, start)
-
-def reportDocumentation(query):
-  ctx='REPORT DOCUMENTATION'
-  start = watcherStart(ctx)
-  reportCollection = 'report'
-  query['SimilarityScore'] = { '$gt': SIMILARITY_THRESHOLD }
-  queryPipeline=[
-    { '$match': query },
-    {
-      '$group': {
-        '_id': {
-          'SrcAddr': '$SrcAddr'
-        },
-        'count': { '$sum': 1 }
-      }
-    },
-    {'$match': {'_id' :{ '$ne' : None }} }, 
-    {'$project': {'name' : '$_id', '_id' : 0} }
-  ]
-  listAttacker = aggregate(queryPipeline, reportCollection)
-  watcherEnd(ctx, start)
