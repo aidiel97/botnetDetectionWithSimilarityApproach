@@ -558,10 +558,19 @@ def similarityMeasurement(query, collection, value=[]):
       print(''.join(loadingChar)+str(progress)+'% data processed!', end="\r")
 
   deleteMany(query, collectionReport) #overwrite same source file report
+
+  databaseLoading = []
   for element in report:
+    print('Store Data to MongoDb'+''.join(databaseLoading), end="\r")
+
+    if(len(databaseLoading) == 5): databaseLoading = []
+    else: databaseLoading.append('.')
+
     try:
       insertOne(element, collectionReport)
     except: #if error cause large BSON
+      print('Failed InsertOne, need to modify some data...', end="\r")
+
       element['NetworkTraffic'] = 'value too large'
       element['NetworkActivities'] = 'value too large'
       element['NetworkId'] = 'value too large'
