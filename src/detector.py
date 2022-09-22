@@ -192,8 +192,8 @@ def reportDocumentation():
 
   recoredReport = []
   for datasetDetail in range(1, len(listSubDataset)+1):
-    for threshold in range(0,10):
-      print('\t..Getting Data from '+stringDatasetName+str(datasetDetail)+'with threshold = '+str(threshold/10))
+    for threshold in range(1,10):
+      print('\t..Getting Data from '+stringDatasetName+str(datasetDetail)+' with threshold = '+str(threshold/10))
       recoredReport.append(getReportData('tp', stringDatasetName, datasetDetail, threshold/10))
       recoredReport.append(getReportData('fp', stringDatasetName, datasetDetail, threshold/10))
 
