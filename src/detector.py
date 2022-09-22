@@ -169,7 +169,22 @@ def getReportData(tpfp, dataset, detail, threshold):
     }
   ]
   recoredReport = aggregate(queryPipeline, reportCollection)
-  recoredReport = recoredReport[0]
+  if(recoredReport == []):
+    recoredReport = {
+      '_id': "",
+      'avgSimSpo':0,
+      'avgSimPer':0,
+      'avgSimSim':0,
+      'minSimSpo':0,
+      'minSimPer':0,
+      'minSimSim':0,
+      'maxSimSpo':0,
+      'maxSimPer':0,
+      'maxSimSim':0,
+      'count': 0
+    }
+  else:
+    recoredReport = recoredReport[0]
   
   # list of column names 
   field_names = 'avgSimSpo,avgSimPer,avgSimSim,minSimSpo,minSimPer,minSimSim,maxSimSpo, maxSimPer, maxSimSim,count,TP/FP,dataset,subDataset,threshold,createdAt'
