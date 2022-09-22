@@ -559,7 +559,15 @@ def similarityMeasurement(query, collection, value=[]):
 
   deleteMany(query, collectionReport) #overwrite same source file report
   for element in report:
-    insertOne(element, collectionReport)
+    try:
+      insertOne(element, collectionReport)
+    except: #if error cause large BSON
+      element['NetworkTraffic'] = 'value too large'
+      element['NetworkActivities'] = 'value too large'
+      element['NetworkId'] = 'value too large'
+
+      #insert with small dimension
+      insertOne(element, collectionReport)
   watcherEnd(ctx, start)
 
 def reportDocumentation(query):
