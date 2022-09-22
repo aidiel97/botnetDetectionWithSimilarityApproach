@@ -169,7 +169,7 @@ def getReportData(tpfp, dataset, detail, threshold):
     }
   ]
   recoredReport = aggregate(queryPipeline, reportCollection)
-  if(recoredReport == []):
+  if(len(recoredReport) == 0):
     recoredReport = {
       '_id': "",
       'avgSimSpo':0,
