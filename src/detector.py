@@ -182,7 +182,7 @@ def getReportData(tpfp, dataset, detail, threshold):
 
   return list(recoredReport.values())
 
-def reportDocumentation(tpfp='tp', dataset='ctu', detail=7, threshold=0.5):
+def reportDocumentation():
   ctx='REPORT DOCUMENTATION'
   datasetIndex = menu.getListDatasetMenu()
   datasetName = loader.listAvailableDatasets[int(datasetIndex)]['list']
@@ -192,8 +192,8 @@ def reportDocumentation(tpfp='tp', dataset='ctu', detail=7, threshold=0.5):
 
   recoredReport = []
   for datasetDetail in range(1, len(listSubDataset)+1):
-    print('\t..Getting Data from '+stringDatasetName+datasetDetail)
     for threshold in range(0,10):
+      print('\t..Getting Data from '+stringDatasetName+str(datasetDetail)+'with threshold = '+str(threshold/10))
       recoredReport.append(getReportData('tp', stringDatasetName, datasetDetail, threshold/10))
       recoredReport.append(getReportData('fp', stringDatasetName, datasetDetail, threshold/10))
 
