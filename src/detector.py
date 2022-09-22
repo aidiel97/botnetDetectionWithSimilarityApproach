@@ -193,9 +193,11 @@ def reportDocumentation(tpfp='tp', dataset='ctu', detail=7, threshold=0.5):
   recoredReport = []
   for datasetDetail in range(1, len(listSubDataset)+1):
     for threshold in range(0,10):
+      print('\t..Getting Data from '+stringDatasetName+datasetDetail+'with threshold = '+str(threshold/10))
       recoredReport.append(getReportData('tp', stringDatasetName, datasetDetail, threshold/10))
       recoredReport.append(getReportData('fp', stringDatasetName, datasetDetail, threshold/10))
 
+  print('Start Export the report to csv...')
   with open('data/report_documentation.csv', 'a', newline='', encoding='utf-8') as csv_file:
     writer = csv.writer(csv_file)
     for data in recoredReport:
